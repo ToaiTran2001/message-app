@@ -1,74 +1,262 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import SearchBar from "@/components/SearchBar";
+import {
+  ActivityIndicator,
+  FlatList,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+} from "react-native";
+import { Redirect, router, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { fetchFriends, fetchSearch } from "@/services/api";
+import useFetch from "@/services/useFetch";
+import Thumbnail from "@/components/Thumbnail";
+import Cell from "@/components/Cell";
+import AddButton from "@/components/AddButton";
+import FloatButton from "@/components/FloatButton";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const FriendRow = ({
+  navigation,
+  item,
+  group,
+  updateFriendListForGroup,
+}: any) => {
+  const [isClick, setIsClick] = useState(false);
 
-export default function HomeScreen() {
+  const onPress = () => {
+    setIsClick(!isClick);
+    updateFriendListForGroup(item);
+  };
+
+  useEffect(() => {
+    setIsClick(false);
+  }, [group]);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <TouchableOpacity
+      onPress={() => {
+        // navigation.navigate("Messages", item);
+        router.push({
+          pathname: "/chat/Message",
+          params: { id: item.id },
+        });
+      }}
+    >
+      <Cell>
+        <Thumbnail url={item.friend.thumbnail} size={76} />
+        <View className="flex-1 px-4">
+          <Text className="font-bold text-dark-100 mb-2">
+            {item.friend.name}
+          </Text>
+          <Text className="text-dark-400 text-sm">{item.preview}</Text>
+          <Text className="text-sm text-dark-500">
+            Time
+            {/* {utils.formatTime(item.updated)} */}
+          </Text>
+        </View>
+        {group && <AddButton isClick={isClick} onPress={onPress} />}
+      </Cell>
+    </TouchableOpacity>
+  );
+};
+
+export default function Index({ navigation }: any) {
+  // const [token, setToken] = useState<string | null>(null);
+
+  // // Check if the token is stored in local storage
+  // useEffect(() => {
+  //   const storedToken = localStorage.getItem("token");
+  //   if (storedToken) {
+  //     setToken(storedToken);
+  //   } else {
+  //     console.log("Token not found");
+  //   }
+  // }, []);
+
+  // if (!token) {
+  //   console.log("Token not found");
+  //   return <Redirect href="../auth/SignIn" />;
+  // }
+
+  const route = useRouter();
+
+  const {
+    data: friends,
+    loading,
+    error,
+  } = useFetch(() => fetchFriends("1"), false);
+
+  const [searchText, setSearchText] = useState("");
+  const {
+    data: searchResults,
+    loading: searchLoading,
+    error: searchError,
+    reFetch: refetchSearch,
+    reset,
+  } = useFetch(() => fetchSearch("1", searchText), false);
+
+  let friendList = [
+    {
+      id: "1",
+      friend: {
+        name: "John Doe",
+        thumbnail: "",
+      },
+      preview: "Hey, how are you?",
+      updated: new Date(),
+    },
+    {
+      id: "2",
+      friend: {
+        name: "Jane Smith",
+        thumbnail: "",
+      },
+      preview: "Let's catch up soon!",
+      updated: new Date(),
+    },
+    {
+      id: "3",
+      friend: {
+        name: "Alice Johnson",
+        thumbnail: "",
+      },
+      preview: "Did you finish the project?",
+      updated: new Date(),
+    },
+    {
+      id: "4",
+      friend: {
+        name: "Bob Brown",
+        thumbnail: "",
+      },
+      preview: "Looking forward to the weekend!",
+      updated: new Date(),
+    },
+    {
+      id: "5",
+      friend: {
+        name: "Charlie Green",
+        thumbnail: "",
+      },
+      preview: "Can you send me the files?",
+      updated: new Date(),
+    },
+  ];
+
+  const onSearch = (text: string) => {
+    console.log("Search pressed");
+    setSearchText(text);
+    // if (searchText.length > 0) {
+    //   friendList = searchResults;
+    // } else {
+    //   friendList = friends;
+    // }
+  };
+
+  useEffect(() => {
+    const timeoutId = setTimeout(async () => {
+      if (searchText.length > 0) {
+        await refetchSearch();
+      } else {
+        reset();
+      }
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchText]);
+
+  const [group, setGroup] = useState(false);
+  const handleGroupPressed = () => {
+    setGroup(!group);
+    setFriendListForGroup([]);
+  };
+
+  const [friendListForGroup, setFriendListForGroup] = useState<any[]>([]);
+  const updateFriendListForGroup = (friend: any) => {
+    const index = friendListForGroup.findIndex((item) => item.id === friend.id);
+    if (index > -1) {
+      setFriendListForGroup((prev) =>
+        prev.filter((item) => item.id !== friend.id)
+      );
+    } else {
+      setFriendListForGroup((prev) => [...prev, friend]);
+    }
+  };
+
+  return (
+    <View className="flex-1 bg-white items-center justify-center">
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#000000"
+          className="mt-10 self-center"
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      ) : error ? (
+        <Text className="text-red-500 text-center mt-10">{error.message}</Text>
+      ) : (
+        <View className="flex-1 w-full px-2">
+          <SearchBar
+            placeholder="Search for your friend or group..."
+            value={searchText}
+            onChangeText={(text: string) => onSearch(text)}
+            onRefresh={() => {
+              setSearchText("");
+            }}
+          ></SearchBar>
+          {searchLoading ? (
+            <ActivityIndicator
+              size="large"
+              color="#000000"
+              className="mt-10 self-center"
+            />
+          ) : searchError ? (
+            <Text className="text-red-500 text-center mt-10">
+              {searchError.message}
+            </Text>
+          ) : (
+            <>
+              <FlatList
+                data={friendList}
+                renderItem={({ item }) => (
+                  <FriendRow
+                    navigation={navigation}
+                    item={item}
+                    group={group}
+                    updateFriendListForGroup={updateFriendListForGroup}
+                  />
+                )}
+                keyExtractor={(item) => item.id}
+              />
+
+              <View className="flex-1 flex-row absolute bottom-24 right-5 z-10">
+                <FloatButton
+                  title="Group"
+                  icon="add"
+                  isPressed={group}
+                  handlePress={handleGroupPressed}
+                />
+
+                {friendListForGroup.length > 1 && (
+                  <FloatButton
+                    title="Next"
+                    icon="navigate-next"
+                    isPressed={false}
+                    handlePress={() => {
+                      router.push({
+                        pathname: "/chat/Group",
+                        params: {
+                          groupMember: JSON.stringify(friendListForGroup),
+                        },
+                      });
+                    }}
+                  />
+                )}
+              </View>
+            </>
+          )}
+        </View>
+      )}
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
