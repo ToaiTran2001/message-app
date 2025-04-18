@@ -1,10 +1,15 @@
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import CustomInput from "@/components/CustomInput";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, router } from "expo-router";
 import Thumbnail from "@/components/Thumbnail";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import CustomButton from "@/components/CustomButton";
+import utils from "@/core/utils";
+import useFetch from "@/services/useFetch";
+import { fetchCreateGroup } from "@/services/api";
+import useGlobal from "@/core/global";
+import { UserInformation } from "@/interfaces/User";
 
 const FriendRowSmall = ({ item, updateFriendListForGroup }: any) => {
   const onPress = () => {
@@ -29,9 +34,7 @@ const FriendRowSmall = ({ item, updateFriendListForGroup }: any) => {
 
 const Group = () => {
   const { groupMember } = useLocalSearchParams();
-  const parsedGroupMember = Array.isArray(groupMember)
-    ? JSON.parse(groupMember[0]) // Parse the first element if it's an array
-    : JSON.parse(groupMember);
+  const parsedGroupMember = utils.parseParams(groupMember);
   const [friendListForGroup, setFriendListForGroup] =
     useState<any[]>(parsedGroupMember);
 
@@ -57,7 +60,33 @@ const Group = () => {
       return;
     }
     setMemberListError("");
-    // call API
+    const user = useGlobal((state) => state.user) as UserInformation;
+    const token = useGlobal((state) => state.tokens);
+    const userRequest = {
+      id: user.id,
+      token: token,
+    };
+    const groupInfo = {
+      groupName: groupName,
+      groupPic: "",
+      member: friendListForGroup.map((item) => item.id),
+      freeTalk: true,
+      freeInvite: true,
+    };
+    const { data, loading, error } = useFetch(
+      () => fetchCreateGroup(userRequest, groupInfo),
+      false
+    );
+
+    if (error) {
+      console.log("Error creating group:", error);
+      return;
+    }
+    if (!loading) {
+      console.log("Group created successfully:", data);
+      // Navigate to the group chat screen or perform any other action
+      router.push("/(tabs)");
+    }
   };
 
   return (

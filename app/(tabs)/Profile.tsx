@@ -1,21 +1,17 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import Thumbnail from "@/components/Thumbnail";
-// import useGlobal from "@/core/global";
 import { launchImageLibrary } from "react-native-image-picker";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import useGlobal from "@/core/global";
+import { UserInformation } from "@/interfaces/User";
 
-const ProfileImage = () => {
-  // const uploadThumbnail = useGlobal((state) => state.uploadThumbnail);
-  // const user = useGlobal((state) => state.user) as {
-  //   thumbnail: string;
-  //   name: string;
-  //   username: string;
-  // };
-  const user = {
-    thumbnail: "",
-  };
+interface ProfileImageProps {
+  profilePic: string;
+}
 
+const ProfileImage = ({ profilePic }: ProfileImageProps) => {
+  const uploadThumbnail = useGlobal((state) => state.uploadThumbnail);
   return (
     <TouchableOpacity
       className="mb-10"
@@ -34,7 +30,7 @@ const ProfileImage = () => {
         // );
       }}
     >
-      <Thumbnail url={user.thumbnail} size={180} />
+      <Thumbnail url={profilePic} size={180} />
       <View className="absolute bottom-0 right-0 bg-primary w-10 h-10 rounded-full items-center justify-center border-2 border-white">
         <Icon name="colorize" size={15} color="#2F4F4F" />
       </View>
@@ -43,12 +39,12 @@ const ProfileImage = () => {
 };
 
 const ProfileLogout = () => {
-  // const logout = useGlobal((state) => state.logout);
+  const logout = useGlobal((state) => state.logout);
 
   return (
     <TouchableOpacity
       onPress={() => {
-        // logout();
+        logout();
       }}
       className="flex-row items-center justify-center h-14 rounded-full bg-primary px-10 mt-10"
     >
@@ -59,20 +55,16 @@ const ProfileLogout = () => {
 };
 
 const Profile = () => {
-  // const user = useGlobal((state) => state.user) as {
-  //   thumbnail: string;
-  //   name: string;
-  //   username: string;
+  const user = useGlobal((state) => state.user) as UserInformation;
+  // const user = {
+  //   firstName: "John",
+  //   lastName: "Doe",
+  //   username: "johndoe",
+  //   profilePic: "",
   // };
-  const user = {
-    firstName: "John",
-    lastName: "Doe",
-    username: "johndoe",
-    thumbnail: "",
-  };
   return (
     <View className="flex-1 items-center justify-center bg-white px-5">
-      <ProfileImage />
+      <ProfileImage profilePic={user.profilePic} />
 
       <Text className="text-center text-dark-100 font-bold text-2xl mb-2">
         {user.firstName} {user.lastName}

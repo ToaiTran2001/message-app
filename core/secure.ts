@@ -1,42 +1,46 @@
-import EncryptedStorage from "react-native-encrypted-storage"
-import utils from "./utils"
+// import EncryptedStorage from "react-native-encrypted-storage"
+// import utils from "./utils"
 
 
-async function set(key: any, object: any) {
-  //utils.log(key)
-  //utils.log(object)
+import * as SecureStore from "expo-secure-store";
+import utils from "./utils";
+
+async function set(key: string, object: any) {
+  //utils.log(key);
+  //utils.log(object);
   try {
-    await EncryptedStorage.setItem(key, JSON.stringify(object))
+    await SecureStore.setItemAsync(key, JSON.stringify(object));
   } catch (error) {
-    console.log('secure.set:', error)
+    console.log('secure.set:', error);
   }
 }
 
-async function get(key: any) {
+async function get(key: string) {
   try {
-    const data = await EncryptedStorage.getItem(key)
+    const data = await SecureStore.getItemAsync(key);
     if (data !== undefined && data !== null) {
-      return JSON.parse(data)
+      return JSON.parse(data);
     }
   } catch (error) {
-    console.log('secure.get:', error)
+    console.log('secure.get:', error);
   }
 }
 
-async function remove(key: any) {
+async function remove(key: string) {
   try {
-    await EncryptedStorage.removeItem(key)
+    await SecureStore.deleteItemAsync(key);
   } catch (error) {
-    console.log('secure.remove:', error)
+    console.log('secure.remove:', error);
   }
 }
 
 async function wipe() {
   try {
-    await EncryptedStorage.clear()
+    // SecureStore does not have a built-in "clear all" method.
+    console.log('SecureStore does not support clearing all items at once.');
   } catch (error) {
-    console.log('secure.wipe:', error)
+    console.log('secure.wipe:', error);
   }
 }
 
-export default { set, get, remove, wipe }
+export default { set, get, remove, wipe };

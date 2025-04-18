@@ -12,6 +12,10 @@ export default function RootLayout() {
         name="auth/SignUp"
         options={{ headerShown: false }}
       ></Stack.Screen>
+      <Stack.Screen
+        name="auth/Verify"
+        options={{ headerShown: false }}
+      ></Stack.Screen>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="chat/Message" options={{ headerShown: true }} />
       <Stack.Screen

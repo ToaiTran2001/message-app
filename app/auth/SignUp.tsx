@@ -7,16 +7,18 @@ import {
   Keyboard,
   ScrollView,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { router, useNavigation } from "expo-router";
 import CustomInput from "@/components/CustomInput";
 import CustomButton from "@/components/CustomButton";
 import useFetch from "@/services/useFetch";
 import { fetchSignUp } from "@/services/api";
 import Title from "@/components/Title";
+import useGlobal from "@/core/global";
 
 const SignUp = () => {
   const navigation = useNavigation();
+  const login = useGlobal((state) => state.login);
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -31,6 +33,19 @@ const SignUp = () => {
   const [lastNameError, setLastNameError] = useState("");
   const [password1Error, setPassword1Error] = useState("");
   const [password2Error, setPassword2Error] = useState("");
+
+  // Make Sign Up request
+  const { data, loading, error, reFetch } = useFetch(
+    () =>
+      fetchSignUp({
+        username,
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+        password: password1,
+      }),
+    false
+  );
 
   const onSignUpPressed = () => {
     console.log("Sign Up Pressed");
@@ -65,27 +80,18 @@ const SignUp = () => {
       return;
     }
 
-    // Test router
-    router.push("/auth/SignIn");
-
-    // // Make Sign Up request
-    // const { data } = useFetch(
-    //   () =>
-    //     fetchSignUp({
-    //       username,
-    //       email: email,
-    //       first_name: firstName,
-    //       last_name: lastName,
-    //       password: password1,
-    //     }),
-    //   false
-    // );
-
-    // if (data) {
-    //   console.log("Sign up successful", data);
-    //   router.push("/auth/SignIn");
-    // }
+    reFetch();
   };
+
+  useEffect(() => {
+    if (error) {
+      console.log("Sign up failed", error.message);
+    }
+    if (data) {
+      console.log("Sign up successful", data);
+      router.push({ pathname: "/auth/Verify", params: { id: data.id } });
+    }
+  }, [data, error]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
