@@ -22,12 +22,14 @@ const FriendRowSmall = ({ item, updateFriendListForGroup }: any) => {
       onPress={onPress}
     >
       <View>
-        <Thumbnail url={item.friend.thumbnail} size={76} />
+        <Thumbnail url={item.profilePic} size={76} />
         <View className="absolute bottom-0 right-0 bg-red-300 w-6 h-6 rounded-full items-center justify-center border-2 border-white">
           <Icon name="close" size={10} color="#2F4F4F" />
         </View>
       </View>
-      <Text className="font-bold text-dark-100 mb-2">{item.friend.name}</Text>
+      <Text className="font-bold text-dark-100 mb-2">
+        {item.firstName} {item.lastName}
+      </Text>
     </TouchableOpacity>
   );
 };

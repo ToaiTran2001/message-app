@@ -4,6 +4,8 @@ import { ADDRESS, fetchSignIn } from '../services/api'
 import utils from './utils'
 import useFetch from '@/services/useFetch'
 import { UserSignInRequest } from '@/interfaces/User'
+import { io } from "socket.io-client";
+
 
 
 
@@ -193,8 +195,12 @@ const useGlobal = create((set: any, get: any) => ({
           throw 'Authentication error'
         }
 
-        const user = response.data.user
-        const tokens = response.data.token
+        let parsedData = response.data
+        if (typeof response.data === "string") {
+          parsedData = utils.parseParams(parsedData)
+        }
+        const user = parsedData?.user
+        const tokens = parsedData?.token.jwt
 
         secure.set('tokens', tokens)
 
@@ -243,64 +249,128 @@ const useGlobal = create((set: any, get: any) => ({
   //     Websocket
   //---------------------
 
-  socket: null,
+  // socket: null,
 
-  socketConnect: async () => {
-    const tokens = await secure.get('tokens')
+  // socketConnect: async () => {
+  //   const tokens = await secure.get('tokens')
 
-    const url = `ws://${ADDRESS}/chat/?token=${tokens.access}`
+  //   const url = `ws://${ADDRESS}/chat/?token=${tokens.access}`
 
-    const socket = new WebSocket(url)
-    socket.onopen = () => {
-      console.log('socket.onopen')
+  //   const socket = new WebSocket(url)
+  //   socket.onopen = () => {
+  //     console.log('socket.onopen')
 
-      socket.send(JSON.stringify({
-        source: 'request.list'
-      }))
-      socket.send(JSON.stringify({
-        source: 'friend.list'
-      }))
-    }
-    socket.onmessage = (event) => {
-      // Convert data to javascript object
-      const parsed = JSON.parse(event.data)
+  //     socket.send(JSON.stringify({
+  //       source: 'request.list'
+  //     }))
+  //     socket.send(JSON.stringify({
+  //       source: 'friend.list'
+  //     }))
+  //   }
+  //   socket.onmessage = (event) => {
+  //     // Convert data to javascript object
+  //     const parsed = JSON.parse(event.data)
 
-      // Debug log formatted  data
-      console.log('onmessage:', parsed)
+  //     // Debug log formatted  data
+  //     console.log('onmessage:', parsed)
 
+  //     const responses = {
+  //       'friend.list':     responseFriendList,
+  //       'friend.new':      responseFriendNew,
+  //       'message.list':    responseMessageList,
+  //       'message.send':    responseMessageSend,
+  //       'message.type':    responseMessageType,
+  //       'request.accept':  responseRequestAccept,
+  //       'request.connect': responseRequestConnect,
+  //       'request.list':    responseRequestList,
+  //       'search':          responseSearch,
+  //       'thumbnail':       responseThumbnail
+  //     }
+  //     const resp = responses[parsed.source as keyof typeof responses]
+  //     if (!resp) {
+  //       // utils.log('parsed.source "' + parsed.source + '" not found')
+  //       console.log('parsed.source "' + parsed.source + '" not found')
+  //       return
+  //     }
+  //     // Call response function
+  //     resp(set, get, parsed.data)
+  //   }
+  //   socket.onerror = (e) => {
+  //     // utils.log('socket.onerror', e.message)
+  //     console.log('socket.onerror', (e as ErrorEvent).message)
+  //   }
+  //   socket.onclose = () => {
+  //     // utils.log('socket.onclose')
+  //     console.log('socket.onclose')
+  //   }
+  //   set((state: any) => ({
+  //     socket: socket
+  //   }))
+  // },
+  socketConnect: async (set: any, get: any) => {
+    const tokens = await secure.get("tokens");
+  
+    // Define the connection URL with the token
+    const url = `http://115.78.92.177:8000/`;
+  
+    // Create a socket connection with the token as a query parameter
+    const socket = io(url, {
+      query: {
+        token: tokens.access,
+      },
+      transports: ["websocket"], // Ensure WebSocket is the transport protocol
+    });
+  
+    // Socket event listeners
+    socket.on("connect", () => {
+      console.log("socket.io connected");
+  
+      // Emit events
+      socket.emit("request.list");
+      socket.emit("friend.list");
+    });
+  
+    socket.on("message", (parsed) => {
+      // Debug log formatted data
+      console.log("onmessage:", parsed);
+  
       const responses = {
-        'friend.list':     responseFriendList,
-        'friend.new':      responseFriendNew,
-        'message.list':    responseMessageList,
-        'message.send':    responseMessageSend,
-        'message.type':    responseMessageType,
-        'request.accept':  responseRequestAccept,
-        'request.connect': responseRequestConnect,
-        'request.list':    responseRequestList,
-        'search':          responseSearch,
-        'thumbnail':       responseThumbnail
-      }
-      const resp = responses[parsed.source as keyof typeof responses]
+        "friend.list": responseFriendList,
+        "friend.new": responseFriendNew,
+        "message.list": responseMessageList,
+        "message.send": responseMessageSend,
+        "message.type": responseMessageType,
+        "request.accept": responseRequestAccept,
+        "request.connect": responseRequestConnect,
+        "request.list": responseRequestList,
+        "search": responseSearch,
+        "thumbnail": responseThumbnail,
+      };
+  
+      const resp = responses[parsed.source];
       if (!resp) {
-        // utils.log('parsed.source "' + parsed.source + '" not found')
-        console.log('parsed.source "' + parsed.source + '" not found')
-        return
+        console.log(`parsed.source "${parsed.source}" not found`);
+        return;
       }
-      // Call response function
-      resp(set, get, parsed.data)
-    }
-    socket.onerror = (e) => {
-      // utils.log('socket.onerror', e.message)
-      console.log('socket.onerror', (e as ErrorEvent).message)
-    }
-    socket.onclose = () => {
-      // utils.log('socket.onclose')
-      console.log('socket.onclose')
-    }
-    set((state: any) => ({
-      socket: socket
-    }))
+  
+      // Call the response function
+      resp(set, get, parsed.data);
+    });
+  
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error.message);
+    });
+  
+    socket.on("disconnect", () => {
+      console.log("socket.io disconnected");
+    });
+  
+    // Save socket instance in state
+    set((state) => ({
+      socket,
+    }));
   },
+  
 
   socketClose: () => {
     const socket =  get().socket

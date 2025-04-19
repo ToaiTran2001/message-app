@@ -6,12 +6,12 @@ import { SendRequest, SendResponse } from "@/interfaces/Request";
 
 export const ADDRESS = "msg.igt.vn:7070"
 
-// const api = axios.create({
-//   baseURL: 'http://' + ADDRESS,
-//   headers: {
-//     'Content-Type': 'application/json'
-//   }
-// })
+const api = axios.create({
+  baseURL: 'http://' + ADDRESS,
+  headers: {
+    'Content-Type': 'application/json; charset=UTF-8'
+  }
+})
 
 // export default api
 
@@ -19,7 +19,7 @@ const BASE_URL = 'http://' + ADDRESS + '/Backend/api/controller'
 const REGISTER_URL = `/profile/register.php`
 const LOGIN_URL = `/profile/login.php`
 const LOGOUT_URL = `/profile/logout.php`
-const VERIFY_URL = `profile/verifyAccount.php`
+const VERIFY_URL = `/profile/verifyAccount.php`
 const CREATE_GROUP_URL = `/group/createGroup.php`
 const GET_FRIENDS_URL =  `/friends/getFriends.php`
 const GET_GROUPS_URL = `/group/getGroups.php`
@@ -35,36 +35,40 @@ const GET_PENDING_LIST_URL = `/friends/getPending.php`
 */
 export const fetchSignUp = async ({username, email, firstName, lastName, password} : UserSignUpRequest) => {
   const endpoint = BASE_URL + REGISTER_URL
-  console.log("Start call API")
-  const response = await fetch(endpoint, {
+  console.log("Call API Sign Up")
+  const response = await api({
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      username,
-      email,
+    url: endpoint,
+    data: {
+      username: username,
+      email: email,
       firstName: firstName,
       lastName: lastName,
-      password,
-    }),
+      password: password
+    }
   })
-  console.log("End call API")
-  console.log("endpoint", endpoint)
-  console.log("body", JSON.stringify({
-    username,
-    email,
-    firstName: firstName,
-    lastName: lastName,
-    password,
-  }),)
+  
   console.log("Response: ", response)
-  if (!response.ok) {
-    throw new Error('Failed to sign up');
-  }
-  const rawData = await response.text();
-  const data = JSON.parse(rawData)
-  return data.results || data;
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+  // const response = await fetch(endpoint, {
+  //   method: 'POST',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify({
+  //     username,
+  //     email,
+  //     firstName: firstName,
+  //     lastName: lastName,
+  //     password,
+  //   }),
+  // })
+  // if (!response.ok) {
+  //   throw new Error('Failed to sign up');
+  // }
+  // const rawData = await response.text();
 }
 
 /*
@@ -73,21 +77,34 @@ export const fetchSignUp = async ({username, email, firstName, lastName, passwor
 */
 export const fetchVerifyAccount = async ({token, id} : UserVerifyAccountRequest) => {
   const endpoint = BASE_URL + VERIFY_URL
-  const response = await fetch(endpoint, {
+  console.log("Call API Verify")
+  const response = await api({
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+    url: endpoint,
+    data: {
+      token: token,
+      id: id
     },
-    body: JSON.stringify({
-      id
-    }),
   })
-  if (!response.ok) {
-    throw new Error('Failed to sign up');
-  }
-  const data = await response.json();
-  return data.results;
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+  // const response = await fetch(endpoint, {
+  //   method: 'POST',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     'Authorization': `Bearer ${token}`,
+  //   },
+  //   body: JSON.stringify({
+  //     id
+  //   }),
+  // })
+  // if (!response.ok) {
+  //   throw new Error('Failed to sign up');
+  // }
+  // const data = await response.json();
+  // return data.results;
 }
 
 /*
@@ -96,23 +113,35 @@ export const fetchVerifyAccount = async ({token, id} : UserVerifyAccountRequest)
 */
 export const fetchSignIn = async ({username, password} : UserSignInRequest) => {
   const endpoint = BASE_URL + LOGIN_URL
-  console.log("Start call API")
-  const response = await fetch(endpoint, {
+  console.log("Call API Sign In")
+  const response = await api({
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      username,
-      password,
-    }),
+    url: endpoint,
+    data: {
+      username: username,
+      password: password
+    }
   })
   console.log("Response: ", response)
-  if (!response.ok) {
-    throw new Error('Failed to sign in');
-  }
-  const data = await response.json();
-  return data.results;
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+  // const response = await fetch(endpoint, {
+  //   method: 'POST',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify({
+  //     username,
+  //     password,
+  //   }),
+  // })
+  // console.log("Response: ", response)
+  // if (!response.ok) {
+  //   throw new Error('Failed to sign in');
+  // }
+  // const data = await response.json();
+  // return data.results;
 }
 
 /*
@@ -121,18 +150,26 @@ export const fetchSignIn = async ({username, password} : UserSignInRequest) => {
 */
 export const fetchSignOut = async () => {
   const endpoint = BASE_URL + LOGOUT_URL
-  const response = await fetch(endpoint, {
+  console.log("Call API Sign Out")
+  const response = await api({
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    url: endpoint,
   })
-  if (!response.ok) {
-    throw new Error('Failed to sign out');
-  }
   console.log("Response: ", response)
-  const data = await response.json();
-  return data.results;
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+  // const response = await fetch(endpoint, {
+  //   method: 'POST',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //   },
+  // })
+  // if (!response.ok) {
+  //   throw new Error('Failed to sign out');
+  // }
+  // const data = await response.json();
+  // return data.results;
 }
 
 
@@ -143,18 +180,30 @@ export const fetchSignOut = async () => {
 */
 export const fetchFriends = async ({token, id} : UserVerifyAccountRequest) => {
   const endpoint = BASE_URL + GET_FRIENDS_URL
-  const response = await fetch(endpoint, {
+  console.log("Call API Get Friends")
+  const response = await api({
     method: 'GET',
+    url: endpoint,
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
+      'Authorization': `Bearer ${token}`
+    }
   })
-  if (!response.ok) {
-    throw new Error('Failed to fetch friend list');
-  }
-  const data = await response.json();
-  return data.results;
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+  // const response = await fetch(endpoint, {
+  //   method: 'GET',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     'Authorization': `Bearer ${token}`,
+  //   },
+  // })
+  // if (!response.ok) {
+  //   throw new Error('Failed to fetch friend list');
+  // }
+  // const data = await response.json();
+  // return data.results;
 }
 
 /*
@@ -164,18 +213,30 @@ export const fetchFriends = async ({token, id} : UserVerifyAccountRequest) => {
 
 export const fetchSearch = async ({token, id} : UserVerifyAccountRequest, keyword: string) => {
   const endpoint = BASE_URL + `/profile/findUser.php?keyword=${keyword}`
-  const response = await fetch(endpoint, {
+  console.log("Call API Get Search Friends")
+  const response = await api({
     method: 'GET',
+    url: endpoint,
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
+      'Authorization': `Bearer ${token}`
+    }
   })
-  if (!response.ok) {
-    throw new Error('Failed to fetch search results');
-  }
-  const data = await response.json();
-  return data.results;
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+  // const response = await fetch(endpoint, {
+  //   method: 'GET',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     'Authorization': `Bearer ${token}`,
+  //   },
+  // })
+  // if (!response.ok) {
+  //   throw new Error('Failed to fetch search results');
+  // }
+  // const data = await response.json();
+  // return data.results;
 }
 
 /*
@@ -184,25 +245,44 @@ export const fetchSearch = async ({token, id} : UserVerifyAccountRequest, keywor
 */
 export const fetchCreateGroup = async ({token, id} : UserVerifyAccountRequest, {groupName, groupPic, member, freeTalk, freeInvite} : GroupInformationRequest) => {
   const endpoint = BASE_URL + CREATE_GROUP_URL
-  const response = await fetch(endpoint, {
+  console.log("Call API Create Group")
+  const response = await api({
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify({
+    url: endpoint,
+    data: {
       group_name: groupName,
       group_pic: groupPic,
       member,
       free_talk: freeTalk,
       free_invite: freeInvite,
-    }),
+    },
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
   })
-  if (!response.ok) {
-    throw new Error('Failed to create group');
-  }
-  const data = await response.json();
-  return data.results;
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+  // const response = await fetch(endpoint, {
+  //   method: 'POST',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     'Authorization': `Bearer ${token}`,
+  //   },
+  //   body: JSON.stringify({
+  //     group_name: groupName,
+  //     group_pic: groupPic,
+  //     member,
+  //     free_talk: freeTalk,
+  //     free_invite: freeInvite,
+  //   }),
+  // })
+  // if (!response.ok) {
+  //   throw new Error('Failed to create group');
+  // }
+  // const data = await response.json();
+  // return data.results;
 }
 
 /*
@@ -211,18 +291,30 @@ export const fetchCreateGroup = async ({token, id} : UserVerifyAccountRequest, {
 */
 export const fetchGroups = async ({token, id} : UserVerifyAccountRequest) => {
   const endpoint = BASE_URL + GET_GROUPS_URL
-  const response = await fetch(endpoint, {
+  console.log("Call API Get Groups")
+  const response = await api({
     method: 'GET',
+    url: endpoint,
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
+      'Authorization': `Bearer ${token}`
+    }
   })
-  if (!response.ok) {
-    throw new Error('Failed to fetch group list');
-  }
-  const data = await response.json();
-  return data.results;
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+  // const response = await fetch(endpoint, {
+  //   method: 'GET',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     'Authorization': `Bearer ${token}`,
+  //   },
+  // })
+  // if (!response.ok) {
+  //   throw new Error('Failed to fetch group list');
+  // }
+  // const data = await response.json();
+  // return data.results;
 }
 
 /*
@@ -231,18 +323,31 @@ export const fetchGroups = async ({token, id} : UserVerifyAccountRequest) => {
 */
 export const fetchPendingList = async ({token, id} : UserVerifyAccountRequest) => {
   const endpoint = BASE_URL + GET_PENDING_LIST_URL
-  const response = await fetch(endpoint, {
+  console.log("Call API Get Pending List")
+  const response = await api({
     method: 'GET',
+    url: endpoint,
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
+      'Authorization': `Bearer ${token}`
+    }
   })
-  if (!response.ok) {
-    throw new Error('Failed to fetch pending list');
-  }
-  const data = await response.json();
-  return data.results;
+  console.log("Endpoint: ", endpoint)
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+  // const response = await fetch(endpoint, {
+  //   method: 'GET',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     'Authorization': `Bearer ${token}`,
+  //   },
+  // })
+  // if (!response.ok) {
+  //   throw new Error('Failed to fetch pending list');
+  // }
+  // const data = await response.json();
+  // return data.results;
 }
 
 /*
@@ -251,21 +356,36 @@ export const fetchPendingList = async ({token, id} : UserVerifyAccountRequest) =
 */
 export const fetchSendRequest = async ({token, id} : UserVerifyAccountRequest, {friendId} : SendRequest) => {
   const endpoint = BASE_URL + SEND_REQUEST_URL
-  const response = await fetch(endpoint, {
+  console.log("Call API Send Request")
+  const response = await api({
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+    url: endpoint,
+    data: {
+      friendId: friendId
     },
-    body: JSON.stringify({
-      friendId,
-    }),
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
   })
-  if (!response.ok) {
-    throw new Error('Failed to send request');
-  }
-  const data = await response.json();
-  return data.results;
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+  // const response = await fetch(endpoint, {
+  //   method: 'POST',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     'Authorization': `Bearer ${token}`,
+  //   },
+  //   body: JSON.stringify({
+  //     friendId,
+  //   }),
+  // })
+  // if (!response.ok) {
+  //   throw new Error('Failed to send request');
+  // }
+  // const data = await response.json();
+  // return data.results;
 }
 
 /*
@@ -274,20 +394,46 @@ export const fetchSendRequest = async ({token, id} : UserVerifyAccountRequest, {
 */
 export const fetchSendResponse = async ({token, id} : UserVerifyAccountRequest, {friendId, responseStatus} : SendResponse) => {
   const endpoint = BASE_URL + SEND_RESPONSE_URL
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      friendId,
-      responseStatus,
-    }),
+  console.log("Call API Send Response")
+  console.log(endpoint)
+  console.log("Body: ", {
+    friendId: friendId,
+    response: responseStatus
   })
-  if (!response.ok) {
-    throw new Error('Failed to send response');
-  }
-  const data = await response.json();
-  return data.results;
+  console.log("Authen: ", {
+    
+      'Authorization': `Bearer ${token}`
+    
+  })
+  const response = await api({
+    method: 'POST',
+    url: endpoint,
+    data: {
+      friendId: friendId,
+      response: responseStatus
+    },
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+  // const response = await fetch(endpoint, {
+  //   method: 'POST',
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     'Authorization': `Bearer ${token}`,
+  //   },
+  //   body: JSON.stringify({
+  //     friendId,
+  //     responseStatus,
+  //   }),
+  // })
+  // if (!response.ok) {
+  //   throw new Error('Failed to send response');
+  // }
+  // const data = await response.json();
+  // return data.results;
 }

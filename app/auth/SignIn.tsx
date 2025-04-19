@@ -15,6 +15,7 @@ import Title from "@/components/Title";
 import { fetchSignIn } from "@/services/api";
 import useFetch from "@/services/useFetch";
 import useGlobal from "@/core/global";
+import utils from "@/core/utils";
 
 const SignIn = () => {
   const router = useRouter();
@@ -59,15 +60,18 @@ const SignIn = () => {
 
   useEffect(() => {
     if (error) {
-      console.log("Sign up failed", error.message);
+      console.log("Sign in failed", error.message);
     }
-    console.log("data", data);
     if (data) {
       const credentials = {
         username: username,
         password: password,
       };
-      login(credentials, data.user, data.token);
+      let parseData = data;
+      if (typeof data === "string") {
+        parseData = utils.parseParams(data);
+      }
+      login(credentials, parseData.user, parseData.token.jwt);
       console.log("Sign up successful", data);
       router.push({
         pathname: "/(tabs)",

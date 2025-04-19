@@ -16,10 +16,12 @@ import CustomButton from "@/components/CustomButton";
 import useFetch from "@/services/useFetch";
 import useGlobal from "@/core/global";
 import utils from "@/core/utils";
+import { useSearchParams } from "expo-router/build/hooks";
 
 const Verify = () => {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const id = useSearchParams().get("id");
+  console.log(id);
 
   const [code, setCode] = useState("");
 

@@ -7,7 +7,7 @@ export interface GroupInformationRequest {
 }
 
 export interface GroupInformationResponse {
-  id: string;
+  id: number;
   groupName: string;
   groupPic: string;
   owner: string;
@@ -21,7 +21,7 @@ export interface CreateGroupResponse {
 }
 
 export interface GroupInformationWithMemberResponse {
-  id: string;
+  id: number;
   groupName: string;
   groupPic: string;
   owner: string;

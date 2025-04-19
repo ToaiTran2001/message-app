@@ -55,13 +55,18 @@ const ProfileLogout = () => {
 };
 
 const Profile = () => {
-  const user = useGlobal((state) => state.user) as UserInformation;
-  // const user = {
-  //   firstName: "John",
-  //   lastName: "Doe",
-  //   username: "johndoe",
-  //   profilePic: "",
-  // };
+  // const user = useGlobal((state) => state.user) as UserInformation;
+
+  const user: UserInformation = {
+    id: 11,
+    username: "huyngu1991",
+    email: "huyxida001@gmail.com",
+    firstName: "Huy",
+    lastName: "Tran",
+    profilePic: "",
+    dob: "2025-04-19",
+  };
+
   return (
     <View className="flex-1 items-center justify-center bg-white px-5">
       <ProfileImage profilePic={user.profilePic} />

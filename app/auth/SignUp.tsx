@@ -15,10 +15,10 @@ import useFetch from "@/services/useFetch";
 import { fetchSignUp } from "@/services/api";
 import Title from "@/components/Title";
 import useGlobal from "@/core/global";
+import utils from "@/core/utils";
 
 const SignUp = () => {
   const navigation = useNavigation();
-  const login = useGlobal((state) => state.login);
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -88,8 +88,11 @@ const SignUp = () => {
       console.log("Sign up failed", error.message);
     }
     if (data) {
-      console.log("Sign up successful", data);
-      router.push({ pathname: "/auth/Verify", params: { id: data.id } });
+      let parseData = data;
+      if (typeof data === "string") {
+        parseData = utils.parseParams(data);
+      }
+      router.push({ pathname: "/auth/Verify", params: { id: parseData.id } });
     }
   }, [data, error]);
 

@@ -43,7 +43,7 @@ const DisplayRow = ({
         // navigation.navigate("Messages", item);
         router.push({
           pathname: "/chat/Message",
-          params: { id: item.id },
+          params: { id: item.id, friend: JSON.stringify(item) },
         });
       }}
     >
@@ -55,8 +55,7 @@ const DisplayRow = ({
           </Text>
           <Text className="text-dark-400 text-sm">{item.preview}</Text>
           <Text className="text-sm text-dark-500">
-            Time
-            {/* {utils.formatTime(item.updated)} */}
+            {utils.formatTime(item.updated)}
           </Text>
         </View>
         {group && item.username && (
@@ -74,11 +73,22 @@ export default function Index({ navigation }: any) {
 
   const user = useGlobal((state) => state.user) as UserInformation;
   const tokens = useGlobal((state) => state.tokens) as string;
+  // const user: UserInformation = {
+  //   id: 11,
+  //   username: "huyngu1991",
+  //   email: "huyxida001@gmail.com",
+  //   firstName: "Huy",
+  //   lastName: "Tran",
+  //   profilePic: "",
+  //   dob: "2025-04-19",
+  // };
+
+  // const tokens =
+  //   "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUSEVfSVNTVUVSIiwiYXVkIjoiVEhFX0FVRElFTkNFIiwiaWF0IjoxNzQ1MDI5MDMxLCJuYmYiOjE3NDUwMjkwMzEsImV4cCI6MTc1MDIxMzAzMSwiZGF0YSI6eyJpZCI6MTEsImVtYWlsIjoiaHV5eGlkYTAwMUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6Imh1eW5ndTE5OTEifX0.v7uTaleO12zOqdz50wq0_zYgYDZDJGCz7OcKrCwdX6M";
 
   if (!user || !tokens) {
     return <Redirect href="/auth/SignIn" />;
   }
-
   const userRequest = {
     id: user.id,
     token: tokens,
@@ -105,67 +115,62 @@ export default function Index({ navigation }: any) {
     reset,
   } = useFetch(() => fetchSearch(userRequest, searchText), false);
 
-  // let friendList = [
+  // let displayList = [
   //   {
   //     id: "1",
-  //     friend: {
-  //       name: "John Doe",
-  //       thumbnail: "",
-  //     },
+  //     firstName: "Hien",
+  //     lastName: "Nguyen",
+  //     username: "hiennguyen",
+  //     profilePic: "",
   //     preview: "Hey, how are you?",
   //     updated: new Date(),
   //   },
   //   {
   //     id: "2",
-  //     friend: {
-  //       name: "Jane Smith",
-  //       thumbnail: "",
-  //     },
-  //     preview: "Let's catch up soon!",
+  //     firstName: "Toai",
+  //     lastName: "Tran",
+  //     username: "toaitran",
+  //     profilePic: "",
+  //     preview: "Hey, how are you?",
   //     updated: new Date(),
   //   },
   //   {
   //     id: "3",
-  //     friend: {
-  //       name: "Alice Johnson",
-  //       thumbnail: "",
-  //     },
-  //     preview: "Did you finish the project?",
+  //     firstName: "Linh",
+  //     lastName: "Nguyen",
+  //     username: "linhnguyen",
+  //     profilePic: "",
+  //     preview: "Hey, how are you?",
   //     updated: new Date(),
   //   },
   //   {
   //     id: "4",
-  //     friend: {
-  //       name: "Bob Brown",
-  //       thumbnail: "",
-  //     },
-  //     preview: "Looking forward to the weekend!",
+  //     firstName: "Loi",
+  //     lastName: "Nguyen",
+  //     username: "loinguyen",
+  //     profilePic: "",
+  //     preview: "Hey, how are you?",
   //     updated: new Date(),
   //   },
-  //   {
-  //     id: "5",
-  //     friend: {
-  //       name: "Charlie Green",
-  //       thumbnail: "",
-  //     },
-  //     preview: "Can you send me the files?",
-  //     updated: new Date(),
-  //   },
+  //   // {
+  //   //   id: "5",
+  //   //   firstName: "Huy",
+  //   //   lastName: "Tran",
+  //   //   username: "huytran",
+  //   //   profilePic: "",
+  //   //   preview: "Hey, how are you?",
+  //   //   updated: new Date(),
+  //   // },
   // ];
 
   const onSearch = (text: string) => {
     console.log("Search pressed");
     setSearchText(text);
-    if (searchText.length > 0) {
-      setDisplayList(searchResults);
-    } else {
-      setDisplayList([].concat(friends).concat(groups));
-    }
   };
 
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
-      if (searchText.length > 0) {
+      if (searchText && searchText.length > 0) {
         await refetchSearch();
       } else {
         reset();
@@ -193,10 +198,14 @@ export default function Index({ navigation }: any) {
   };
 
   useEffect(() => {
-    if (searchText.length > 0) {
-      setDisplayList(searchResults);
+    if (searchText && searchText.length > 0) {
+      setDisplayList(searchResults as []);
     } else {
-      setDisplayList([].concat(friends).concat(groups));
+      setDisplayList(
+        []
+          .concat(friends === null ? [] : (friends as []))
+          .concat(groups === null ? [] : (groups as []))
+      );
     }
   }, [friends, groups, searchResults]);
 

@@ -13,7 +13,7 @@ export interface UserSignUpRequest {
 
 export interface UserVerifyAccountRequest {
   token: string;
-  id: string;
+  id: number;
 }
 
 export interface UserProfileRequest {
@@ -26,7 +26,7 @@ export interface UserProfileRequest {
 }
 
 export interface UserInformation {
-  id: string;
+  id: number;
   username: string;
   email: string;
   firstName: string;
@@ -37,7 +37,7 @@ export interface UserInformation {
 
 export interface UserSignUpResponse {
   message: string;
-  id: string;
+  id: number;
 }
 
 export interface UserSignInResponse {
