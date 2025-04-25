@@ -1,7 +1,13 @@
 import { Stack } from "expo-router";
 import "./global.css";
+import { useEffect } from "react";
+import useGlobal from "@/core/global";
 
 export default function RootLayout() {
+  useEffect(() => {
+    useGlobal.getState().init(); // ✅ Ensures initialization runs once
+  }, []);
+
   return (
     <Stack initialRouteName="auth/SignIn">
       <Stack.Screen

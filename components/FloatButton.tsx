@@ -17,11 +17,11 @@ const FloatButton = ({
 }: FloatButtonProps) => {
   return (
     <TouchableOpacity
-      className="flex-row h-10 items-center justify-center rounded-[6px] px-2 ml-2"
+      className="flex-row h-10 w-20 items-center justify-center rounded-[6px] px-2 ml-2"
       style={{ backgroundColor: isPressed ? "#4682B4" : "#87CEFA" }}
       onPress={handlePress}
     >
-      <Text className="font-bold text-lg text-dark-100">{title}</Text>
+      <Text className="font-bold text-black">{title}</Text>
       <Icon name={icon} size={15}></Icon>
     </TouchableOpacity>
   );

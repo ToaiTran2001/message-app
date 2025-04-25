@@ -5,12 +5,13 @@ import {
   ActivityIndicator,
   FlatList,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Cell from "@/components/Cell";
 import Thumbnail from "@/components/Thumbnail";
 import Empty from "@/components/Empty";
 import useFetch from "@/services/useFetch";
 import {
+  fetchFriends,
   fetchPendingList,
   fetchSearch,
   fetchSendRequest,
@@ -21,35 +22,26 @@ import { SendRequest, SendResponse } from "@/interfaces/Request";
 import useGlobal from "@/core/global";
 import SearchBar from "@/components/SearchBar";
 import utils from "@/core/utils";
+import LoadComponent from "@/components/LoadComponent";
+import { useFocusEffect } from "expo-router";
 
-const ACCEPT = "accepted";
-const REJECT = "rejected";
-const ADD = "add";
-
-// const user: UserInformation = {
-//   id: 11,
-//   username: "huyngu1991",
-//   email: "huyxida001@gmail.com",
-//   firstName: "Huy",
-//   lastName: "Tran",
-//   profilePic: "",
-//   dob: "2025-04-19",
-// };
-
-// const token =
-//   "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUSEVfSVNTVUVSIiwiYXVkIjoiVEhFX0FVRElFTkNFIiwiaWF0IjoxNzQ1MDI5MDMxLCJuYmYiOjE3NDUwMjkwMzEsImV4cCI6MTc1MDIxMzAzMSwiZGF0YSI6eyJpZCI6MTEsImVtYWlsIjoiaHV5eGlkYTAwMUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6Imh1eW5ndTE5OTEifX0.v7uTaleO12zOqdz50wq0_zYgYDZDJGCz7OcKrCwdX6M";
+const ACCEPT_TYPE = "accepted";
+const REJECT_TYPE = "rejected";
+const ADD_TYPE = "add";
 
 interface RequestAcceptProps {
   friendId: string;
   responseStatus: string;
   color: string;
-  reload: () => void;
+  onPress: (value: string) => void;
+  clickValue: string;
 }
 const RequestAccept = ({
   friendId,
   responseStatus,
   color,
-  reload,
+  onPress,
+  clickValue,
 }: RequestAcceptProps) => {
   const user = useGlobal((state) => state.user) as UserInformation;
   const token = useGlobal((state) => state.tokens) as string;
@@ -67,59 +59,82 @@ const RequestAccept = ({
   );
 
   const handleOnPress = () => {
-    reFetch();
-    reload();
+    if (clickValue === "") {
+      reFetch();
+    }
+    onPress(responseStatus);
   };
 
   if (loading) {
-    return <ActivityIndicator style={{ flex: 1 }} />;
+    return <LoadComponent />;
   }
 
   return (
     <TouchableOpacity
-      className="px-4 h-10 rounded-xl items-center justify-center my-1"
-      style={{ backgroundColor: color }}
+      className="px-2 h-10 w-20 rounded-[6px] items-center justify-center my-1"
+      style={{ backgroundColor: clickValue !== "" ? "#ADB5BD" : color }}
       onPress={handleOnPress}
     >
-      <Text className="text-white font-bold">{responseStatus}</Text>
+      <Text className="text-black font-bold">
+        {responseStatus === ACCEPT_TYPE ? "Accept" : "Reject"}
+      </Text>
     </TouchableOpacity>
   );
 };
 
 interface RequestCreateProps {
   friendId: string;
+  isFriend: boolean;
+  clickValue: string;
+  onPress: (value: string) => void;
 }
-const RequestCreate = ({ friendId }: RequestCreateProps) => {
+const RequestCreate = ({
+  friendId,
+  isFriend,
+  clickValue,
+  onPress,
+}: RequestCreateProps) => {
   const user = useGlobal((state) => state.user) as UserInformation;
   const token = useGlobal((state) => state.tokens) as string;
   const userRequest = {
     id: user.id,
     token: token,
   };
-  const [isClick, setIsClick] = useState(false);
+
   const { data, loading, error, reFetch } = useFetch(
     () => fetchSendRequest(userRequest, { friendId: friendId }),
     false
   );
-  const handleOnPress = () => {
-    reFetch();
-    setIsClick(true);
+
+  const handleOnPress = (value: string) => {
+    if (!isFriend) {
+      reFetch();
+    }
+    onPress(value);
   };
   return (
     <TouchableOpacity
-      className="bg-primary px-4 h-10 rounded-xl items-center justify-center my-1"
-      onPress={() => (isClick ? null : handleOnPress)}
+      className="px-2 h-10 w-20 rounded-[6px] items-center justify-center my-1"
+      style={{
+        backgroundColor: isFriend || clickValue !== "" ? "#ADB5BD" : "#87CEFA",
+      }}
+      onPress={() => handleOnPress(ADD_TYPE)}
     >
-      <Text className="text-white font-bold">{ADD}</Text>
+      <Text className="text-white font-bold">
+        {isFriend ? "Friend" : "Add"}
+      </Text>
     </TouchableOpacity>
   );
 };
 
 interface RequestRowProps {
   item: any;
-  reload: () => void;
 }
-const RequestRow = ({ item, reload }: RequestRowProps) => {
+const RequestRow = ({ item }: RequestRowProps) => {
+  const [clickValue, setClickValue] = useState("");
+  const onPress = (value: string) => {
+    setClickValue(value);
+  };
   return (
     <Cell>
       <Thumbnail url={item.profilePic} size={76} />
@@ -131,24 +146,56 @@ const RequestRow = ({ item, reload }: RequestRowProps) => {
       {item && item.request ? (
         <>
           <View>
-            <RequestAccept
-              friendId={item.id}
-              responseStatus={ACCEPT}
-              color="#32CD32"
-              reload={reload}
-            />
-            <RequestAccept
-              friendId={item.id}
-              responseStatus={REJECT}
-              color="#FF0000"
-              reload={reload}
-            />
+            {clickValue === ACCEPT_TYPE ? (
+              <RequestAccept
+                friendId={item.id}
+                responseStatus={ACCEPT_TYPE}
+                color="#98FB98"
+                onPress={(value: string) => onPress(value)}
+                clickValue={clickValue}
+              />
+            ) : clickValue === REJECT_TYPE ? (
+              <RequestAccept
+                friendId={item.id}
+                responseStatus={REJECT_TYPE}
+                color="#FF7F7F"
+                onPress={(value: string) => onPress(value)}
+                clickValue={clickValue}
+              />
+            ) : (
+              <>
+                <RequestAccept
+                  friendId={item.id}
+                  responseStatus={ACCEPT_TYPE}
+                  color="#98FB98"
+                  onPress={(value: string) => onPress(value)}
+                  clickValue={clickValue}
+                />
+                <RequestAccept
+                  friendId={item.id}
+                  responseStatus={REJECT_TYPE}
+                  color="#FF7F7F"
+                  onPress={(value: string) => onPress(value)}
+                  clickValue={clickValue}
+                />
+              </>
+            )}
           </View>
         </>
+      ) : item.isFriend ? (
+        <RequestCreate
+          friendId={item.id}
+          isFriend={true}
+          onPress={(value: string) => onPress(value)}
+          clickValue={clickValue}
+        />
       ) : (
-        <>
-          <RequestCreate friendId={item.id} />
-        </>
+        <RequestCreate
+          friendId={item.id}
+          isFriend={false}
+          onPress={onPress}
+          clickValue={clickValue}
+        />
       )}
     </Cell>
   );
@@ -161,11 +208,22 @@ const Request = () => {
     id: user.id,
     token: token,
   };
+  const [friendList, setFriendList] = useState<any[]>([]);
+  const [pendingList, setPendingList] = useState<any[]>([]);
   const [requestList, setRequestList] = useState<any[]>([]); // Placeholder for requestList, replace with actual data fetching logic
-  const { data, loading, error, reFetch } = useFetch(
-    () => fetchPendingList(userRequest),
-    true
-  );
+  const {
+    data: pendings,
+    loading: pendingsLoading,
+    error: pendingsError,
+    reFetch: pendingsReFetch,
+  } = useFetch(() => fetchPendingList(userRequest), true);
+
+  const {
+    data: friends,
+    loading: friendsLoading,
+    error: friendsError,
+    reFetch: friendsReFetch,
+  } = useFetch(() => fetchFriends(userRequest), false);
 
   const [searchText, setSearchText] = useState("");
   const {
@@ -182,34 +240,40 @@ const Request = () => {
 
   useEffect(() => {
     if (searchText && searchText.length > 0) {
-      let dataTemp: any[] = [];
-      if (data) {
-        dataTemp = [].concat(data as []);
-      }
-
       let searchResultsTemp = searchResults as [];
       searchResultsTemp.forEach((item: any) => {
         if (item) {
-          const index = dataTemp.findIndex((user: any) => user.id === item.id);
+          const index = pendingList.findIndex(
+            (user: any) => user.id === item.id
+          );
           if (index > -1) {
             item.request = true;
+          } else {
+            item.request = false;
+          }
+        }
+        if (item) {
+          const index = friendList.findIndex(
+            (user: any) => user.id === item.id
+          );
+          if (index > -1) {
+            item.isFriend = true;
+          } else {
+            item.isFriend = false;
           }
         }
       });
+
       setRequestList(searchResultsTemp);
     } else {
-      let dataTemp: any[] = [];
-      if (data) {
-        dataTemp = [].concat(data as []);
-      }
-      dataTemp.forEach((item: any) => {
+      pendingList.forEach((item: any) => {
         if (item) {
           item.request = true;
         }
       });
-      setRequestList(dataTemp);
+      setRequestList(pendingList);
     }
-  }, [data, searchResults]);
+  }, [pendings, friends, searchResults]);
 
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
@@ -222,9 +286,39 @@ const Request = () => {
     return () => clearTimeout(timeoutId);
   }, [searchText]);
 
-  const handleReload = () => {
-    reFetch();
-  };
+  useEffect(() => {
+    if (token) {
+      friendsReFetch();
+      pendingsReFetch();
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (friends) {
+      const tempList = friends as [];
+      setFriendList(tempList);
+    }
+  }, [friends]);
+
+  useEffect(() => {
+    if (pendings) {
+      const tempList = pendings as [];
+      setPendingList(tempList);
+      tempList.forEach((item: any) => {
+        if (item) {
+          item.request = true;
+        }
+      });
+      setRequestList(tempList);
+    }
+  }, [pendings]);
+
+  useFocusEffect(
+    useCallback(() => {
+      friendsReFetch();
+      pendingsReFetch();
+    }, [])
+  );
 
   // let requestList = [
   //   {
@@ -280,18 +374,29 @@ const Request = () => {
   // ];
 
   // Show loading indicator
-  if (searchLoading) {
-    return <ActivityIndicator style={{ flex: 1 }} />;
+  if (searchLoading || friendsLoading || pendingsLoading) {
+    return <LoadComponent />;
   }
 
   // Show empty if no requests
   if (
     requestList &&
     requestList.length === 0 &&
-    searchText &&
-    searchText.length === 0
+    (!searchText || searchText.length === 0)
   ) {
-    return <Empty icon="notifications-none" message="No requests" />;
+    return (
+      <View className="flex flex-1 w-full px-2 bg-white">
+        <SearchBar
+          placeholder="Search for a user..."
+          value={searchText}
+          onChangeText={(text: string) => onSearch(text)}
+          onRefresh={() => {
+            setSearchText("");
+          }}
+        ></SearchBar>
+        <Empty icon="notifications-none" message="No requests" />
+      </View>
+    );
   }
   return (
     <View className="flex flex-1 w-full px-2 bg-white">
@@ -305,9 +410,7 @@ const Request = () => {
       ></SearchBar>
       <FlatList
         data={requestList}
-        renderItem={({ item }) => (
-          <RequestRow item={item} reload={handleReload} />
-        )}
+        renderItem={({ item }) => <RequestRow item={item} />}
         keyExtractor={(item: any) => item.id}
       />
     </View>

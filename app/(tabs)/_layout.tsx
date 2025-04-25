@@ -1,7 +1,8 @@
 import { View, Text } from "react-native";
-import React from "react";
+import React, { useEffect } from "react";
 import { Tabs } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import useGlobal from "@/core/global";
 
 const TabIcon = ({ focused, title, icon }: any) => {
   return (

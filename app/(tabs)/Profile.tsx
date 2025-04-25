@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Thumbnail from "@/components/Thumbnail";
 import { launchImageLibrary } from "react-native-image-picker";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -8,7 +8,7 @@ import { UserInformation } from "@/interfaces/User";
 import useFetch from "@/services/useFetch";
 import { fetchSignOut, fetchUploadPicture } from "@/services/api";
 import * as ImagePicker from "expo-image-picker";
-import { Redirect, router } from "expo-router";
+import { Redirect, router, useFocusEffect } from "expo-router";
 
 interface ProfileImageProps {
   profilePic: string;
@@ -73,7 +73,7 @@ const ProfileLogout = () => {
     <TouchableOpacity
       onPress={async () => {
         await reFetch();
-        // logout();
+        logout();
         router.navigate("/auth/SignIn");
       }}
       className="flex-row items-center justify-center h-14 rounded-full bg-primary px-10 mt-10"
@@ -86,6 +86,8 @@ const ProfileLogout = () => {
 
 const Profile = () => {
   const user = useGlobal((state) => state.user) as UserInformation;
+
+  useFocusEffect(useCallback(() => {}, []));
 
   return (
     <View className="flex-1 items-center justify-center bg-white px-5">

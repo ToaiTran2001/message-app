@@ -8,8 +8,14 @@ import {
   View,
   StyleSheet,
 } from "react-native";
-import { Redirect, router, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import {
+  Redirect,
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import { fetchFriends, fetchGroups, fetchSearch } from "@/services/api";
 import useFetch from "@/services/useFetch";
 import Thumbnail from "@/components/Thumbnail";
@@ -19,6 +25,8 @@ import FloatButton from "@/components/FloatButton";
 import useGlobal from "@/core/global";
 import utils from "@/core/utils";
 import { UserInformation } from "@/interfaces/User";
+import useAuth from "@/core/useAuth";
+import LoadComponent from "@/components/LoadComponent";
 
 // const user: UserInformation = {
 //   id: 11,
@@ -77,33 +85,12 @@ const DisplayRow = ({ navigation, item, group, updateMemberList }: any) => {
 export default function Index({ navigation }: any) {
   const user = useGlobal((state) => state.user) as UserInformation;
   const token = useGlobal((state) => state.tokens) as string;
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const initialized = useGlobal((state) => state.initialized);
+  const { isLoading, isLoggedIn } = useAuth();
   const [displayList, setDisplayList] = useState([]);
 
   const route = useRouter();
 
-  useEffect(() => {
-    if (user && token) {
-      setIsCheckingAuth(false); // Authenticated
-    } else {
-      // Wait a tick in case Zustand updates late
-      const timer = setTimeout(() => setIsCheckingAuth(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [user, token]);
-
-  if (isCheckingAuth)
-    return (
-      <ActivityIndicator
-        size="large"
-        color="#000000"
-        className="mt-10 self-center"
-      />
-    );
-
-  if (!user || !token) {
-    return <Redirect href="/auth/SignIn" />;
-  }
   const userRequest = {
     id: user.id,
     token: token,
@@ -113,13 +100,15 @@ export default function Index({ navigation }: any) {
     data: friends,
     loading: friendsLoading,
     error: friendsError,
-  } = useFetch(() => fetchFriends(userRequest), true);
+    reFetch: friendsReFetch,
+  } = useFetch(() => fetchFriends(userRequest), false);
 
   const {
     data: groups,
     loading: groupsLoading,
     error: groupsError,
-  } = useFetch(() => fetchGroups(userRequest), true);
+    reFetch: groupReFetch,
+  } = useFetch(() => fetchGroups(userRequest), false);
 
   const [searchText, setSearchText] = useState("");
   const {
@@ -130,57 +119,19 @@ export default function Index({ navigation }: any) {
     reset,
   } = useFetch(() => fetchSearch(userRequest, searchText), false);
 
-  // let displayList = [
-  //   {
-  //     id: "1",
-  //     firstName: "Hien",
-  //     lastName: "Nguyen",
-  //     username: "hiennguyen",
-  //     profilePic: "",
-  //     preview: "Hey, how are you?",
-  //     updated: new Date(),
-  //   },
-  //   {
-  //     id: "2",
-  //     firstName: "Toai",
-  //     lastName: "Tran",
-  //     username: "toaitran",
-  //     profilePic: "",
-  //     preview: "Hey, how are you?",
-  //     updated: new Date(),
-  //   },
-  //   {
-  //     id: "3",
-  //     firstName: "Linh",
-  //     lastName: "Nguyen",
-  //     username: "linhnguyen",
-  //     profilePic: "",
-  //     preview: "Hey, how are you?",
-  //     updated: new Date(),
-  //   },
-  //   {
-  //     id: "4",
-  //     firstName: "Loi",
-  //     lastName: "Nguyen",
-  //     username: "loinguyen",
-  //     profilePic: "",
-  //     preview: "Hey, how are you?",
-  //     updated: new Date(),
-  //   },
-  //   // {
-  //   //   id: "5",
-  //   //   firstName: "Huy",
-  //   //   lastName: "Tran",
-  //   //   username: "huytran",
-  //   //   profilePic: "",
-  //   //   preview: "Hey, how are you?",
-  //   //   updated: new Date(),
-  //   // },
-  // ];
-
   const onSearch = (text: string) => {
     console.log("Search pressed");
     setSearchText(text);
+  };
+
+  const [memberList, setMemberList] = useState<any[]>([]);
+  const updateMemberList = (friend: any) => {
+    const index = memberList.findIndex((item) => item.id === friend.id);
+    if (index > -1) {
+      setMemberList((prev) => prev.filter((item) => item.id !== friend.id));
+    } else {
+      setMemberList((prev) => [...prev, friend]);
+    }
   };
 
   useEffect(() => {
@@ -200,16 +151,6 @@ export default function Index({ navigation }: any) {
     setMemberList([]);
   };
 
-  const [memberList, setMemberList] = useState<any[]>([]);
-  const updateMemberList = (friend: any) => {
-    const index = memberList.findIndex((item) => item.id === friend.id);
-    if (index > -1) {
-      setMemberList((prev) => prev.filter((item) => item.id !== friend.id));
-    } else {
-      setMemberList((prev) => [...prev, friend]);
-    }
-  };
-
   useEffect(() => {
     if (searchText && searchText.length > 0) {
       setDisplayList(searchResults as []);
@@ -222,14 +163,34 @@ export default function Index({ navigation }: any) {
     }
   }, [friends, groups, searchResults]);
 
+  useEffect(() => {
+    if (token) {
+      friendsReFetch();
+      groupReFetch();
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isLoggedIn) {
+        router.replace("/auth/SignIn");
+      }
+    }
+  }, [isLoading, isLoggedIn]);
+
+  useFocusEffect(
+    useCallback(() => {
+      friendsReFetch();
+      groupReFetch();
+    }, [])
+  );
+
+  if (isLoading) return <LoadComponent />;
+
   return (
     <View className="flex-1 bg-white items-center justify-center">
       {friendsLoading || groupsLoading ? (
-        <ActivityIndicator
-          size="large"
-          color="#000000"
-          className="mt-10 self-center"
-        />
+        <LoadComponent />
       ) : friendsError ? (
         <Text className="text-red-500 text-center mt-10">
           {friendsError.message}
@@ -249,11 +210,7 @@ export default function Index({ navigation }: any) {
             }}
           ></SearchBar>
           {searchLoading ? (
-            <ActivityIndicator
-              size="large"
-              color="#000000"
-              className="mt-10 self-center"
-            />
+            <LoadComponent />
           ) : searchError ? (
             <Text className="text-red-500 text-center mt-10">
               {searchError.message}
@@ -267,7 +224,7 @@ export default function Index({ navigation }: any) {
                     navigation={navigation}
                     item={item}
                     group={group}
-                    updateFriendListForGroup={updateMemberList}
+                    updateMemberList={updateMemberList}
                   />
                 )}
                 keyExtractor={(item: any) => item.id}

@@ -7,6 +7,7 @@ import FileView from "./FileView";
 interface FileBubbleFriendProps {
   fileUrl: string;
   fileType: string;
+  fileContent: any;
   friend: any;
   typing?: boolean;
 }
@@ -14,6 +15,7 @@ interface FileBubbleFriendProps {
 const FileBubbleFriend = ({
   fileUrl,
   fileType,
+  fileContent,
   friend,
   typing,
 }: FileBubbleFriendProps) => {
@@ -28,7 +30,11 @@ const FileBubbleFriend = ({
             <MessageTypingAnimation offset={2} />
           </View>
         ) : (
-          <FileView fileUrl={fileUrl} fileType={fileType} />
+          <FileView
+            fileUrl={fileUrl}
+            fileType={fileType}
+            fileContent={fileContent}
+          />
         )}
       </View>
       <View className="flex-1" />

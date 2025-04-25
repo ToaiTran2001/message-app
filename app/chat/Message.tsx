@@ -109,13 +109,17 @@ function FileBubble({ index, message, friend }: any) {
     }
     return;
   }
-
   return message.sender === user.id.toString() ? (
-    <FileBubbleMe fileUrl={message.file_url} fileType={message.file_type} />
+    <FileBubbleMe
+      fileUrl={message.file_url}
+      fileType={message.file_type}
+      fileContent={message.content}
+    />
   ) : (
     <FileBubbleFriend
       fileUrl={message.file_url}
       fileType={message.file_type}
+      fileContent={message.connect}
       friend={friend}
     />
   );
@@ -187,8 +191,7 @@ const ChatRoom = () => {
 
       // Event listeners for messages
       newSocket.on("personal_message", (data) => {
-        console.log("Received personal message:", data);
-        console.log("ChatId", chatId);
+        // console.log("Received personal message:", data);
         if (
           (data.sender === userId && data.receiver === chatId) ||
           (data.sender === chatId && data.receiver === userId)
@@ -208,7 +211,6 @@ const ChatRoom = () => {
 
       newSocket.on("group_message", (data) => {
         console.log("Received group message:", data);
-        console.log("ChatId", chatId);
         if (
           (data.sender === userId && data.receiver === chatId) ||
           (data.sender === chatId && data.receiver === userId)
@@ -267,23 +269,6 @@ const ChatRoom = () => {
 
   const [message, setMessage] = useState("");
 
-  // const messagesList = useGlobal((state) => state.messagesList);
-  // const messagesNext = useGlobal((state) => state.messagesNext);
-
-  // const messageList = useGlobal((state) => state.messageList);
-  // const messageSend = useGlobal((state) => state.messageSend);
-  // const messageType = useGlobal((state) => state.messageType);
-  // Placeholder for the actual messages list
-  // const messagesNext = null; // Placeholder for the actual next messages
-  // const messageList = null; // Placeholder for the actual message list function
-  // const messageSend = null; // Placeholder for the actual message send function
-  // const messageType = null; // Placeholder for the actual message type function
-
-  // const connectionId = route.params.id
-  // const friend = route.params.friend
-  // const friend = null; // Placeholder for the actual friend data
-  // const connectionId = null; // Placeholder for the actual connection ID
-
   // Update the header
   const navigation = useNavigation();
 
@@ -306,8 +291,8 @@ const ChatRoom = () => {
       content: message,
       reply: "",
     });
-    setMessage("");
     console.log(messageList);
+    setMessage("");
   };
 
   const onSendMultiMedia = (fileContent: any) => {
@@ -319,8 +304,8 @@ const ChatRoom = () => {
       file_type: fileContent.fileType,
       reply: "",
     });
-    console.log(response);
     console.log(messageList);
+    setMessage("");
   };
 
   const onType = (value: any) => {

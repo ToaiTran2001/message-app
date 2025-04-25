@@ -10,14 +10,14 @@ interface AddButtonProps {
 const AddButton = ({ isClick, onPress }: AddButtonProps) => {
   return (
     <TouchableOpacity
-      className="p-1 h-6 rounded-full items-center justify-center"
-      style={{ backgroundColor: isClick ? "#FF0000" : "#32CD32" }}
+      className="p-1 h-8 w-8 rounded-full items-center justify-center"
+      style={{ backgroundColor: isClick ? "#FF7F7F" : "#98FB98" }}
       onPress={onPress}
     >
       {isClick ? (
-        <Icon name="remove" size={15} color="#FFF0F5"></Icon>
+        <Icon name="remove" size={15} color="#000000"></Icon>
       ) : (
-        <Icon name="add" size={15} color="#FFF0F5"></Icon>
+        <Icon name="add" size={15} color="#000000"></Icon>
       )}
     </TouchableOpacity>
   );

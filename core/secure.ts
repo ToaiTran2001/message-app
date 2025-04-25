@@ -1,13 +1,6 @@
-// import EncryptedStorage from "react-native-encrypted-storage"
-// import utils from "./utils"
-
-
 import * as SecureStore from "expo-secure-store";
-import utils from "./utils";
 
 async function set(key: string, object: any) {
-  //utils.log(key);
-  //utils.log(object);
   try {
     await SecureStore.setItemAsync(key, JSON.stringify(object));
   } catch (error) {
@@ -36,8 +29,8 @@ async function remove(key: string) {
 
 async function wipe() {
   try {
-    // SecureStore does not have a built-in "clear all" method.
-    console.log('SecureStore does not support clearing all items at once.');
+    await SecureStore.deleteItemAsync("credentials");
+    await SecureStore.deleteItemAsync("tokens");
   } catch (error) {
     console.log('secure.wipe:', error);
   }

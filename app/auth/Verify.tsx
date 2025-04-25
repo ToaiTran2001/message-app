@@ -69,7 +69,7 @@ const Verify = () => {
             />
           ) : (
             <View className="flex-1 justify-center px-5">
-              <Title text="Message App" color="#000000" />
+              <Title text="InnoMess" color="#000000" />
 
               <CustomInput
                 placeholder="Code"

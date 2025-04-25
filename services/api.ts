@@ -385,6 +385,7 @@ export const fetchPendingList = async ({token, id} : UserVerifyAccountRequest) =
 */
 export const fetchSendRequest = async ({token, id} : UserVerifyAccountRequest, {friendId} : SendRequest) => {
   const endpoint = BASE_URL + SEND_REQUEST_URL
+  console.log("Friend ID:", friendId)
   console.log("Call API Send Request")
   const response = await api({
     method: 'POST',
