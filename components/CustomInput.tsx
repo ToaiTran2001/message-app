@@ -24,7 +24,7 @@ const CustomInput = ({
     <View>
       <Text className="text-base text-xl font-semibold mb-1">{title}</Text>
       <TextInput
-        className="text-base h-13 rounded-xl px-4 border-2 border-solid text-[16px] border-[#A0A0A0]"
+        className="h-12 rounded-xl px-4 border-2 border-solid text-[16px] border-[#A0A0A0]"
         autoCapitalize="none"
         autoComplete="off"
         onChangeText={(text) => {

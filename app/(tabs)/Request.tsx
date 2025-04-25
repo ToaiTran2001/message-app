@@ -26,6 +26,19 @@ const ACCEPT = "accepted";
 const REJECT = "rejected";
 const ADD = "add";
 
+// const user: UserInformation = {
+//   id: 11,
+//   username: "huyngu1991",
+//   email: "huyxida001@gmail.com",
+//   firstName: "Huy",
+//   lastName: "Tran",
+//   profilePic: "",
+//   dob: "2025-04-19",
+// };
+
+// const token =
+//   "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUSEVfSVNTVUVSIiwiYXVkIjoiVEhFX0FVRElFTkNFIiwiaWF0IjoxNzQ1MDI5MDMxLCJuYmYiOjE3NDUwMjkwMzEsImV4cCI6MTc1MDIxMzAzMSwiZGF0YSI6eyJpZCI6MTEsImVtYWlsIjoiaHV5eGlkYTAwMUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6Imh1eW5ndTE5OTEifX0.v7uTaleO12zOqdz50wq0_zYgYDZDJGCz7OcKrCwdX6M";
+
 interface RequestAcceptProps {
   friendId: string;
   responseStatus: string;
@@ -38,30 +51,18 @@ const RequestAccept = ({
   color,
   reload,
 }: RequestAcceptProps) => {
-  const requestAccept = useGlobal((state) => state.requestAccept);
   const user = useGlobal((state) => state.user) as UserInformation;
   const token = useGlobal((state) => state.tokens) as string;
-  // const user: UserInformation = {
-  //   id: 11,
-  //   username: "huyngu1991",
-  //   email: "huyxida001@gmail.com",
-  //   firstName: "Huy",
-  //   lastName: "Tran",
-  //   profilePic: "",
-  //   dob: "2025-04-19",
-  // };
-
-  // const token =
-  //   "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUSEVfSVNTVUVSIiwiYXVkIjoiVEhFX0FVRElFTkNFIiwiaWF0IjoxNzQ1MDI5MDMxLCJuYmYiOjE3NDUwMjkwMzEsImV4cCI6MTc1MDIxMzAzMSwiZGF0YSI6eyJpZCI6MTEsImVtYWlsIjoiaHV5eGlkYTAwMUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6Imh1eW5ndTE5OTEifX0.v7uTaleO12zOqdz50wq0_zYgYDZDJGCz7OcKrCwdX6M";
+  const userRequest = {
+    id: user.id,
+    token: token,
+  };
   const { data, loading, error, reFetch } = useFetch(
     () =>
-      fetchSendResponse(
-        {
-          token: token,
-          id: user.id,
-        },
-        { friendId: friendId, responseStatus: responseStatus }
-      ),
+      fetchSendResponse(userRequest, {
+        friendId: friendId,
+        responseStatus: responseStatus,
+      }),
     false
   );
 
@@ -91,29 +92,13 @@ interface RequestCreateProps {
 const RequestCreate = ({ friendId }: RequestCreateProps) => {
   const user = useGlobal((state) => state.user) as UserInformation;
   const token = useGlobal((state) => state.tokens) as string;
-
-  // const user: UserInformation = {
-  //   id: 11,
-  //   username: "huyngu1991",
-  //   email: "huyxida001@gmail.com",
-  //   firstName: "Huy",
-  //   lastName: "Tran",
-  //   profilePic: "",
-  //   dob: "2025-04-19",
-  // };
-
-  // const token =
-  //   "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUSEVfSVNTVUVSIiwiYXVkIjoiVEhFX0FVRElFTkNFIiwiaWF0IjoxNzQ1MDI5MDMxLCJuYmYiOjE3NDUwMjkwMzEsImV4cCI6MTc1MDIxMzAzMSwiZGF0YSI6eyJpZCI6MTEsImVtYWlsIjoiaHV5eGlkYTAwMUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6Imh1eW5ndTE5OTEifX0.v7uTaleO12zOqdz50wq0_zYgYDZDJGCz7OcKrCwdX6M";
+  const userRequest = {
+    id: user.id,
+    token: token,
+  };
   const [isClick, setIsClick] = useState(false);
   const { data, loading, error, reFetch } = useFetch(
-    () =>
-      fetchSendRequest(
-        {
-          token: token,
-          id: user.id,
-        },
-        { friendId: friendId }
-      ),
+    () => fetchSendRequest(userRequest, { friendId: friendId }),
     false
   );
   const handleOnPress = () => {
@@ -134,10 +119,7 @@ interface RequestRowProps {
   item: any;
   reload: () => void;
 }
-const RequestRow = ({ item, reload }: any) => {
-  const message = "Requested to connect with you";
-  //const time = '7m ago'
-
+const RequestRow = ({ item, reload }: RequestRowProps) => {
   return (
     <Cell>
       <Thumbnail url={item.profilePic} size={76} />
@@ -174,27 +156,12 @@ const RequestRow = ({ item, reload }: any) => {
 
 const Request = () => {
   const user = useGlobal((state) => state.user) as UserInformation;
-  const tokens = useGlobal((state) => state.tokens) as string;
-
-  // const user: UserInformation = {
-  //   id: 11,
-  //   username: "huyngu1991",
-  //   email: "huyxida001@gmail.com",
-  //   firstName: "Huy",
-  //   lastName: "Tran",
-  //   profilePic: "",
-  //   dob: "2025-04-19",
-  // };
-
-  // const tokens =
-  //   "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUSEVfSVNTVUVSIiwiYXVkIjoiVEhFX0FVRElFTkNFIiwiaWF0IjoxNzQ1MDI5MDMxLCJuYmYiOjE3NDUwMjkwMzEsImV4cCI6MTc1MDIxMzAzMSwiZGF0YSI6eyJpZCI6MTEsImVtYWlsIjoiaHV5eGlkYTAwMUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6Imh1eW5ndTE5OTEifX0.v7uTaleO12zOqdz50wq0_zYgYDZDJGCz7OcKrCwdX6M";
+  const token = useGlobal((state) => state.tokens) as string;
   const userRequest = {
     id: user.id,
-    token: tokens,
+    token: token,
   };
-
   const [requestList, setRequestList] = useState<any[]>([]); // Placeholder for requestList, replace with actual data fetching logic
-
   const { data, loading, error, reFetch } = useFetch(
     () => fetchPendingList(userRequest),
     true

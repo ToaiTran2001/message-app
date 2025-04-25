@@ -20,17 +20,25 @@ import useGlobal from "@/core/global";
 import utils from "@/core/utils";
 import { UserInformation } from "@/interfaces/User";
 
-const DisplayRow = ({
-  navigation,
-  item,
-  group,
-  updateFriendListForGroup,
-}: any) => {
+// const user: UserInformation = {
+//   id: 11,
+//   username: "huyngu1991",
+//   email: "huyxida001@gmail.com",
+//   firstName: "Huy",
+//   lastName: "Tran",
+//   profilePic: "",
+//   dob: "2025-04-19",
+// };
+
+// const tokens =
+//   "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUSEVfSVNTVUVSIiwiYXVkIjoiVEhFX0FVRElFTkNFIiwiaWF0IjoxNzQ1MDI5MDMxLCJuYmYiOjE3NDUwMjkwMzEsImV4cCI6MTc1MDIxMzAzMSwiZGF0YSI6eyJpZCI6MTEsImVtYWlsIjoiaHV5eGlkYTAwMUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6Imh1eW5ndTE5OTEifX0.v7uTaleO12zOqdz50wq0_zYgYDZDJGCz7OcKrCwdX6M";
+
+const DisplayRow = ({ navigation, item, group, updateMemberList }: any) => {
   const [isClick, setIsClick] = useState(false);
 
   const onPress = () => {
     setIsClick(!isClick);
-    updateFriendListForGroup(item);
+    updateMemberList(item);
   };
 
   useEffect(() => {
@@ -43,7 +51,7 @@ const DisplayRow = ({
         // navigation.navigate("Messages", item);
         router.push({
           pathname: "/chat/Message",
-          params: { id: item.id, friend: JSON.stringify(item) },
+          params: { item: JSON.stringify(item) },
         });
       }}
     >
@@ -67,31 +75,38 @@ const DisplayRow = ({
 };
 
 export default function Index({ navigation }: any) {
+  const user = useGlobal((state) => state.user) as UserInformation;
+  const token = useGlobal((state) => state.tokens) as string;
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [displayList, setDisplayList] = useState([]);
 
   const route = useRouter();
 
-  const user = useGlobal((state) => state.user) as UserInformation;
-  const tokens = useGlobal((state) => state.tokens) as string;
-  // const user: UserInformation = {
-  //   id: 11,
-  //   username: "huyngu1991",
-  //   email: "huyxida001@gmail.com",
-  //   firstName: "Huy",
-  //   lastName: "Tran",
-  //   profilePic: "",
-  //   dob: "2025-04-19",
-  // };
+  useEffect(() => {
+    if (user && token) {
+      setIsCheckingAuth(false); // Authenticated
+    } else {
+      // Wait a tick in case Zustand updates late
+      const timer = setTimeout(() => setIsCheckingAuth(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [user, token]);
 
-  // const tokens =
-  //   "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUSEVfSVNTVUVSIiwiYXVkIjoiVEhFX0FVRElFTkNFIiwiaWF0IjoxNzQ1MDI5MDMxLCJuYmYiOjE3NDUwMjkwMzEsImV4cCI6MTc1MDIxMzAzMSwiZGF0YSI6eyJpZCI6MTEsImVtYWlsIjoiaHV5eGlkYTAwMUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6Imh1eW5ndTE5OTEifX0.v7uTaleO12zOqdz50wq0_zYgYDZDJGCz7OcKrCwdX6M";
+  if (isCheckingAuth)
+    return (
+      <ActivityIndicator
+        size="large"
+        color="#000000"
+        className="mt-10 self-center"
+      />
+    );
 
-  if (!user || !tokens) {
+  if (!user || !token) {
     return <Redirect href="/auth/SignIn" />;
   }
   const userRequest = {
     id: user.id,
-    token: tokens,
+    token: token,
   };
 
   const {
@@ -182,18 +197,16 @@ export default function Index({ navigation }: any) {
   const [group, setGroup] = useState(false);
   const handleGroupPressed = () => {
     setGroup(!group);
-    setFriendListForGroup([]);
+    setMemberList([]);
   };
 
-  const [friendListForGroup, setFriendListForGroup] = useState<any[]>([]);
-  const updateFriendListForGroup = (friend: any) => {
-    const index = friendListForGroup.findIndex((item) => item.id === friend.id);
+  const [memberList, setMemberList] = useState<any[]>([]);
+  const updateMemberList = (friend: any) => {
+    const index = memberList.findIndex((item) => item.id === friend.id);
     if (index > -1) {
-      setFriendListForGroup((prev) =>
-        prev.filter((item) => item.id !== friend.id)
-      );
+      setMemberList((prev) => prev.filter((item) => item.id !== friend.id));
     } else {
-      setFriendListForGroup((prev) => [...prev, friend]);
+      setMemberList((prev) => [...prev, friend]);
     }
   };
 
@@ -254,7 +267,7 @@ export default function Index({ navigation }: any) {
                     navigation={navigation}
                     item={item}
                     group={group}
-                    updateFriendListForGroup={updateFriendListForGroup}
+                    updateFriendListForGroup={updateMemberList}
                   />
                 )}
                 keyExtractor={(item: any) => item.id}
@@ -268,7 +281,7 @@ export default function Index({ navigation }: any) {
                   handlePress={handleGroupPressed}
                 />
 
-                {friendListForGroup.length > 1 && (
+                {memberList.length > 1 && (
                   <FloatButton
                     title="Next"
                     icon="navigate-next"
@@ -277,7 +290,7 @@ export default function Index({ navigation }: any) {
                       router.push({
                         pathname: "/chat/Group",
                         params: {
-                          groupMember: JSON.stringify(friendListForGroup),
+                          groupMember: JSON.stringify(memberList),
                         },
                       });
                     }}

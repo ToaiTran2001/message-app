@@ -39,6 +39,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "0.76.9",
+    "react-native-document-picker": "^9.3.1",
     "react-native-encrypted-storage": "^4.0.3",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-image-picker": "^8.2.0",
@@ -50,7 +51,10 @@
     "react-native-webview": "13.12.5",
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^3.4.17",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "expo-document-picker": "~13.0.3",
+    "expo-image-picker": "~16.0.6",
+    "expo-camera": "~16.0.18"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

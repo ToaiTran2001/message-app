@@ -20,14 +20,17 @@ import utils from "@/core/utils";
 const SignIn = () => {
   const router = useRouter();
 
+  // State to control input fields
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  // State to control error validate
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
   const login = useGlobal((state) => state.login);
-  // Make Sign In request
+
+  // Sign In request
   const { data, loading, error, reFetch } = useFetch(
     () =>
       fetchSignIn({
@@ -37,8 +40,8 @@ const SignIn = () => {
     false
   );
 
-  const SignInPressed = () => {
-    console.log("Sign In Pressed");
+  const onSignInPressed = () => {
+    console.log("Sign In pressed");
 
     // Check username
     const failUsername = !username;
@@ -67,12 +70,8 @@ const SignIn = () => {
         username: username,
         password: password,
       };
-      let parseData = data;
-      if (typeof data === "string") {
-        parseData = utils.parseParams(data);
-      }
+      let parseData = utils.parseParams(data);
       login(credentials, parseData.user, parseData.token.jwt);
-      console.log("Sign up successful", data);
       router.push({
         pathname: "/(tabs)",
       });
@@ -91,7 +90,7 @@ const SignIn = () => {
             />
           ) : (
             <View className="flex-1 justify-center px-5">
-              <Title text="Message App" color="#000000" />
+              <Title text="InnoMess" color="#000000" />
 
               <CustomInput
                 placeholder="Username"
@@ -114,14 +113,14 @@ const SignIn = () => {
 
               <CustomButton
                 title="Sign In"
-                onPress={SignInPressed}
+                onPress={onSignInPressed}
               ></CustomButton>
 
-              <Text className="text-center mt-10">
+              <Text className="text-center mt-4">
                 Don't have an account?{" "}
                 <Text
                   className="text-blue-500 font-semibold"
-                  onPress={() => router.push("/auth/SignUp")}
+                  onPress={() => router.navigate("/auth/SignUp")}
                 >
                   Sign Up
                 </Text>

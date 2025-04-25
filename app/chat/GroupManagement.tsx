@@ -1,19 +1,19 @@
-import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, FlatList } from "react-native";
 import React, { useEffect, useState } from "react";
-import CustomInput from "@/components/CustomInput";
-import { useRouter, useLocalSearchParams, router } from "expo-router";
+import Icon from "react-native-vector-icons/Ionicons";
 import Thumbnail from "@/components/Thumbnail";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import CustomButton from "@/components/CustomButton";
+import { router, useLocalSearchParams } from "expo-router";
 import utils from "@/core/utils";
-import useFetch from "@/services/useFetch";
-import { fetchCreateGroup } from "@/services/api";
-import useGlobal from "@/core/global";
 import { UserInformation } from "@/interfaces/User";
+import useGlobal from "@/core/global";
+import useFetch from "@/services/useFetch";
+import CustomInput from "@/components/CustomInput";
+import CustomButton from "@/components/CustomButton";
+import { fetchModifyGroup } from "@/services/api";
 
-const FriendRowSmall = ({ item, updateMemberList }: any) => {
+const FriendRowSmall = ({ item, updateFriendListForGroup }: any) => {
   const onPress = () => {
-    updateMemberList(item);
+    updateFriendListForGroup(item);
   };
 
   return (
@@ -34,10 +34,11 @@ const FriendRowSmall = ({ item, updateMemberList }: any) => {
   );
 };
 
-const Group = () => {
-  const { members } = useLocalSearchParams();
-  const parsedMembers = utils.parseParams(members);
-  const [memberList, setMemberList] = useState<any[]>(parsedMembers);
+const GroupManagement = () => {
+  const { name, members } = useLocalSearchParams();
+  const parsedGroupMember = utils.parseParams(members);
+  const parsedName = utils.parseParams(name);
+  const [memberList, setMemberList] = useState<any[]>(parsedGroupMember);
 
   const updateMemberList = (friend: any) => {
     const index = memberList.findIndex((item: any) => item.id === friend.id);
@@ -47,16 +48,16 @@ const Group = () => {
       setMemberList((prev) => [...prev, friend]);
     }
   };
-  const [groupName, setGroupName] = useState<string>("");
+  const [groupName, setGroupName] = useState<string>(parsedName);
   const [groupNameError, setGroupNameError] = useState<string>("");
   const [memberListError, setMemberListError] = useState<string>("");
+
   const user = useGlobal((state) => state.user) as UserInformation;
   const token = useGlobal((state) => state.tokens);
   const userRequest = {
     id: user.id,
     token: token,
   };
-
   const groupInfo = {
     groupName: groupName,
     groupPic: "",
@@ -65,11 +66,11 @@ const Group = () => {
     freeInvite: true,
   };
   const { data, loading, error, reFetch } = useFetch(
-    () => fetchCreateGroup(userRequest, groupInfo),
+    () => fetchModifyGroup(userRequest, groupInfo),
     false
   );
 
-  const onCreatePressed = () => {
+  const onConfirmPressed = () => {
     if (memberList?.length < 2) {
       setMemberListError("Group is as least 3 members");
       return;
@@ -108,7 +109,10 @@ const Group = () => {
         <FlatList
           data={memberList}
           renderItem={({ item }) => (
-            <FriendRowSmall item={item} updateMemberList={updateMemberList} />
+            <FriendRowSmall
+              item={item}
+              updateFriendListForGroup={updateMemberList}
+            />
           )}
           keyExtractor={(item) => item.id}
           numColumns={4}
@@ -116,10 +120,10 @@ const Group = () => {
         <Text className="text-red-500 text-center mt-10">
           {memberListError}
         </Text>
-        <CustomButton title="OK" onPress={onCreatePressed} />
+        <CustomButton title="OK" onPress={onConfirmPressed} />
       </View>
     </View>
   );
 };
 
-export default Group;
+export default GroupManagement;

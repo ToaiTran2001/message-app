@@ -62,9 +62,10 @@ const formatTime = (date: string | null) => {
 }
 
 const parseParams = (params: any) => {
-	return Array.isArray(params)
-	? JSON.parse(params[0]) // Parse the first element if it's an array
-	: JSON.parse(params);
+	if (typeof params === "string") {
+		return JSON.parse(params);
+	}
+	return params
 }
 
 export default { thumbnail, formatTime, parseParams }

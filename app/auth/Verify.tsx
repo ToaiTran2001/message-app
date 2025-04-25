@@ -20,25 +20,27 @@ import { useSearchParams } from "expo-router/build/hooks";
 
 const Verify = () => {
   const router = useRouter();
-  const id = useSearchParams().get("id");
-  console.log(id);
+  const { id } = useLocalSearchParams();
+  const parseId = utils.parseParams(id);
 
+  // State to control input fields
   const [code, setCode] = useState("");
 
+  // State to control error validate
   const [codeError, setCodeError] = useState("");
 
-  // Make Sign In request
+  // Verify request
   const { data, loading, error, reFetch } = useFetch(
     () =>
       fetchVerifyAccount({
         token: code,
-        id: utils.parseParams(id),
+        id: parseId,
       }),
     false
   );
 
-  const VerifyPressed = () => {
-    console.log("Verify Pressed");
+  const onVerifyPressed = () => {
+    console.log("Verify pressed");
 
     reFetch();
   };
@@ -48,7 +50,7 @@ const Verify = () => {
       console.log("Verify failed", error.message);
     }
     if (data) {
-      console.log("Sign up successful", data);
+      console.log("Verify successful", data);
       router.push({
         pathname: "/(tabs)",
       });
@@ -80,7 +82,7 @@ const Verify = () => {
 
               <CustomButton
                 title="Verify"
-                onPress={VerifyPressed}
+                onPress={onVerifyPressed}
               ></CustomButton>
             </View>
           )}

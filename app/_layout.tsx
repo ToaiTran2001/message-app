@@ -19,6 +19,10 @@ export default function RootLayout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="chat/Message" options={{ headerShown: true }} />
       <Stack.Screen
+        name="chat/GroupManagement"
+        options={{ headerShown: true }}
+      />
+      <Stack.Screen
         name="chat/Group"
         options={{ headerShown: true, title: "New Group" }}
       />

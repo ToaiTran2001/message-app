@@ -1,36 +1,59 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Thumbnail from "@/components/Thumbnail";
 import { launchImageLibrary } from "react-native-image-picker";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import useGlobal from "@/core/global";
 import { UserInformation } from "@/interfaces/User";
+import useFetch from "@/services/useFetch";
+import { fetchSignOut, fetchUploadPicture } from "@/services/api";
+import * as ImagePicker from "expo-image-picker";
+import { Redirect, router } from "expo-router";
 
 interface ProfileImageProps {
   profilePic: string;
 }
 
 const ProfileImage = ({ profilePic }: ProfileImageProps) => {
-  const uploadThumbnail = useGlobal((state) => state.uploadThumbnail);
+  const user = useGlobal((state) => state.user) as UserInformation;
+  const token = useGlobal((state) => state.tokens) as string;
+  const userRequest = {
+    id: user.id,
+    token: token,
+  };
+
+  const [selectedImage, setSelectedImage] = useState<string>(profilePic);
+  // Upload request
+  const { data, loading, error, reFetch } = useFetch(
+    () =>
+      fetchUploadPicture(userRequest, {
+        pictureUri: selectedImage,
+      }),
+    false
+  );
+
+  const uploadPicture = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedImage) {
+      reFetch();
+    }
+  }, [selectedImage]);
+
   return (
-    <TouchableOpacity
-      className="mb-10"
-      onPress={() => {
-        // launchImageLibrary(
-        //   {
-        //     includeBase64: true,
-        //     mediaType: "photo",
-        //   },
-        //   (response) => {
-        //     if (response.didCancel) return;
-        //     if (!response.assets) return;
-        //     const file = response.assets[0];
-        //     uploadThumbnail(file);
-        //   }
-        // );
-      }}
-    >
-      <Thumbnail url={profilePic} size={180} />
+    <TouchableOpacity className="mb-10" onPress={uploadPicture}>
+      <Thumbnail url={selectedImage} size={180} />
       <View className="absolute bottom-0 right-0 bg-primary w-10 h-10 rounded-full items-center justify-center border-2 border-white">
         <Icon name="colorize" size={15} color="#2F4F4F" />
       </View>
@@ -40,11 +63,18 @@ const ProfileImage = ({ profilePic }: ProfileImageProps) => {
 
 const ProfileLogout = () => {
   const logout = useGlobal((state) => state.logout);
+  // Logout request
+  const { data, loading, error, reFetch } = useFetch(
+    () => fetchSignOut(),
+    false
+  );
 
   return (
     <TouchableOpacity
-      onPress={() => {
-        logout();
+      onPress={async () => {
+        await reFetch();
+        // logout();
+        router.navigate("/auth/SignIn");
       }}
       className="flex-row items-center justify-center h-14 rounded-full bg-primary px-10 mt-10"
     >
@@ -55,17 +85,7 @@ const ProfileLogout = () => {
 };
 
 const Profile = () => {
-  // const user = useGlobal((state) => state.user) as UserInformation;
-
-  const user: UserInformation = {
-    id: 11,
-    username: "huyngu1991",
-    email: "huyxida001@gmail.com",
-    firstName: "Huy",
-    lastName: "Tran",
-    profilePic: "",
-    dob: "2025-04-19",
-  };
+  const user = useGlobal((state) => state.user) as UserInformation;
 
   return (
     <View className="flex-1 items-center justify-center bg-white px-5">
@@ -77,7 +97,6 @@ const Profile = () => {
       <Text className="text-center text-dark-400 text-base mb-2">
         @{user.username}
       </Text>
-
       <ProfileLogout />
     </View>
   );

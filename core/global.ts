@@ -121,55 +121,55 @@ const responseRequestAccept = (set: any, get: any, connection: any) => {
   }
 }
 
-const responseRequestConnect = (set: any, get: any, connection: any) => {
-  const user = get().user
-  // If i was the one that made the connect request, 
-  // update the search list row
-  if (user.username === connection.sender.username) {
-    const searchList = [...get().searchList]
-    const searchIndex = searchList.findIndex(
-      request => request.username === connection.receiver.username
-    )
-    if (searchIndex >= 0) {
-      searchList[searchIndex].status = 'pending-them'
-      set((state: any) => ({
-        searchList: searchList
-      }))
-    }
-  // If they were the one  that sent the connect 
-  // request, add request to request list
-  } else {
-    const requestList = [...get().requestList]
-    const requestIndex = requestList.findIndex(
-      request => request.sender.username === connection.sender.username
-    )
-    if (requestIndex === -1) {
-      requestList.unshift(connection)
-      set((state: any) => ({
-        requestList: requestList
-      }))
-    }
-  }
-}
+// const responseRequestConnect = (set: any, get: any, connection: any) => {
+//   const user = get().user
+//   // If i was the one that made the connect request, 
+//   // update the search list row
+//   if (user.username === connection.sender.username) {
+//     const searchList = [...get().searchList]
+//     const searchIndex = searchList.findIndex(
+//       request => request.username === connection.receiver.username
+//     )
+//     if (searchIndex >= 0) {
+//       searchList[searchIndex].status = 'pending-them'
+//       set((state: any) => ({
+//         searchList: searchList
+//       }))
+//     }
+//   // If they were the one  that sent the connect 
+//   // request, add request to request list
+//   } else {
+//     const requestList = [...get().requestList]
+//     const requestIndex = requestList.findIndex(
+//       request => request.sender.username === connection.sender.username
+//     )
+//     if (requestIndex === -1) {
+//       requestList.unshift(connection)
+//       set((state: any) => ({
+//         requestList: requestList
+//       }))
+//     }
+//   }
+// }
 
-const responseRequestList = (set: any, get: any, requestList: any) => {
-  set((state: any) => ({
-    requestList: requestList
-  }))
-}
+// const responseRequestList = (set: any, get: any, requestList: any) => {
+//   set((state: any) => ({
+//     requestList: requestList
+//   }))
+// }
 
-const responseSearch = (set: any, get: any, data: any) => {
-  set((state: any) => ({
-    searchList: data
-  }))
-}
+// const responseSearch = (set: any, get: any, data: any) => {
+//   set((state: any) => ({
+//     searchList: data
+//   }))
+// }
 
 
-const responseThumbnail = (set: any, get: any, data: any) => {
-  set((state: any) => ({
-    user: data
-  }))
-}
+// const responseThumbnail = (set: any, get: any, data: any) => {
+//   set((state: any) => ({
+//     user: data
+//   }))
+// }
 
 const useGlobal = create((set: any, get: any) => ({
 
@@ -241,7 +241,8 @@ const useGlobal = create((set: any, get: any) => ({
     secure.wipe()
     set((state: any) => ({
       authenticated: false,
-      user: {}
+      user: {},
+      tokens: ""
     }))
   },
 
@@ -307,100 +308,100 @@ const useGlobal = create((set: any, get: any) => ({
   //     socket: socket
   //   }))
   // },
-  socketConnect: async (set: any, get: any) => {
-    const tokens = await secure.get("tokens");
+  // socketConnect: async (set: any, get: any) => {
+  //   const tokens = await secure.get("tokens");
   
-    // Define the connection URL with the token
-    const url = `http://115.78.92.177:8000/`;
+  //   // Define the connection URL with the token
+  //   const url = `http://115.78.92.177:8000/`;
   
-    // Create a socket connection with the token as a query parameter
-    const socket = io(url, {
-      query: {
-        token: tokens.access,
-      },
-      transports: ["websocket"], // Ensure WebSocket is the transport protocol
-    });
+  //   // Create a socket connection with the token as a query parameter
+  //   const socket = io(url, {
+  //     query: {
+  //       token: tokens.access,
+  //     },
+  //     transports: ["websocket"], // Ensure WebSocket is the transport protocol
+  //   });
   
-    // Socket event listeners
-    socket.on("connect", () => {
-      console.log("socket.io connected");
+  //   // Socket event listeners
+  //   socket.on("connect", () => {
+  //     console.log("socket.io connected");
   
-      // Emit events
-      socket.emit("request.list");
-      socket.emit("friend.list");
-    });
+  //     // Emit events
+  //     socket.emit("request.list");
+  //     socket.emit("friend.list");
+  //   });
   
-    socket.on("message", (parsed) => {
-      // Debug log formatted data
-      console.log("onmessage:", parsed);
+  //   socket.on("message", (parsed) => {
+  //     // Debug log formatted data
+  //     console.log("onmessage:", parsed);
   
-      const responses = {
-        "friend.list": responseFriendList,
-        "friend.new": responseFriendNew,
-        "message.list": responseMessageList,
-        "message.send": responseMessageSend,
-        "message.type": responseMessageType,
-        "request.accept": responseRequestAccept,
-        "request.connect": responseRequestConnect,
-        "request.list": responseRequestList,
-        "search": responseSearch,
-        "thumbnail": responseThumbnail,
-      };
+  //     const responses = {
+  //       "friend.list": responseFriendList,
+  //       "friend.new": responseFriendNew,
+  //       "message.list": responseMessageList,
+  //       "message.send": responseMessageSend,
+  //       "message.type": responseMessageType,
+  //       "request.accept": responseRequestAccept,
+  //       "request.connect": responseRequestConnect,
+  //       "request.list": responseRequestList,
+  //       "search": responseSearch,
+  //       "thumbnail": responseThumbnail,
+  //     };
   
-      const resp = responses[parsed.source];
-      if (!resp) {
-        console.log(`parsed.source "${parsed.source}" not found`);
-        return;
-      }
+  //     const resp = responses[parsed.source];
+  //     if (!resp) {
+  //       console.log(`parsed.source "${parsed.source}" not found`);
+  //       return;
+  //     }
   
-      // Call the response function
-      resp(set, get, parsed.data);
-    });
+  //     // Call the response function
+  //     resp(set, get, parsed.data);
+  //   });
   
-    socket.on("connect_error", (error) => {
-      console.error("Socket connection error:", error.message);
-    });
+  //   socket.on("connect_error", (error) => {
+  //     console.error("Socket connection error:", error.message);
+  //   });
   
-    socket.on("disconnect", () => {
-      console.log("socket.io disconnected");
-    });
+  //   socket.on("disconnect", () => {
+  //     console.log("socket.io disconnected");
+  //   });
   
-    // Save socket instance in state
-    set((state) => ({
-      socket,
-    }));
-  },
+  //   // Save socket instance in state
+  //   set((state) => ({
+  //     socket,
+  //   }));
+  // },
   
 
-  socketClose: () => {
-    const socket =  get().socket
-    if (socket) {
-      socket.close()
-    }
-    set((state: any) => ({
-      socket: null
-    }))
-  },
+  // socketClose: () => {
+  //   const socket =  get().socket
+  //   if (socket) {
+  //     socket.close()
+  //   }
+  //   set((state: any) => ({
+  //     socket: null
+  //   }))
+  // },
 
   //---------------------
   //     Search
   //---------------------
 
-  searchList: null,
+  // searchList: null,
 
-  searchUsers: (query: any) => {
-    if (query) {
-      const socket = get().socket
-      socket.send(JSON.stringify({
-        source: 'search',
-        query: query
-      }))
-    } else {
-      set((state: any) => ({
-        searchList: null
-      }))
-    }
-  },
+  // searchUsers: (query: any) => {
+  //   if (query) {
+  //     const socket = get().socket
+  //     socket.send(JSON.stringify({
+  //       source: 'search',
+  //       query: query
+  //     }))
+  //   } else {
+  //     set((state: any) => ({
+  //       searchList: null
+  //     }))
+  //   }
+  // },
 
   //---------------------
   //     Requests

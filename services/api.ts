@@ -21,11 +21,13 @@ const LOGIN_URL = `/profile/login.php`
 const LOGOUT_URL = `/profile/logout.php`
 const VERIFY_URL = `/profile/verifyAccount.php`
 const CREATE_GROUP_URL = `/group/createGroup.php`
+const MODIFY_GROUP_URL = ``
 const GET_FRIENDS_URL =  `/friends/getFriends.php`
 const GET_GROUPS_URL = `/group/getGroups.php`
 const SEND_RESPONSE_URL = `/friends/sendResponse.php`
 const SEND_REQUEST_URL = `/friends/sendRequest.php`
 const GET_PENDING_LIST_URL = `/friends/getPending.php`
+const POST_PICTURE_URL = ``
 
 // User API
 
@@ -286,6 +288,33 @@ export const fetchCreateGroup = async ({token, id} : UserVerifyAccountRequest, {
 }
 
 /*
+  Creat Group API
+  Response: CreateGroupResponse
+*/
+export const fetchModifyGroup = async ({token, id} : UserVerifyAccountRequest, {groupName, groupPic, member, freeTalk, freeInvite} : GroupInformationRequest) => {
+  const endpoint = BASE_URL + MODIFY_GROUP_URL
+  console.log("Call API Modify Group")
+  const response = await api({
+    method: 'POST',
+    url: endpoint,
+    data: {
+      group_name: groupName,
+      group_pic: groupPic,
+      member,
+      free_talk: freeTalk,
+      free_invite: freeInvite,
+    },
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+}
+
+/*
   Get Groups API
   Response: List<GroupInformationWithMemberResponse>
 */
@@ -436,4 +465,31 @@ export const fetchSendResponse = async ({token, id} : UserVerifyAccountRequest, 
   // }
   // const data = await response.json();
   // return data.results;
+}
+
+/*
+  Upload Picture
+  Response: null
+*/
+export const fetchUploadPicture = async ({token, id} : UserVerifyAccountRequest, {pictureUri} : {pictureUri: string}) => {
+  const endpoint = BASE_URL + POST_PICTURE_URL
+  console.log("Call API Upload Picture")
+  console.log(endpoint)
+  console.log("Body: ", {
+    profilePic: pictureUri
+  })
+  const response = await api({
+    method: 'POST',
+    url: endpoint,
+    data: {
+      profilePic: pictureUri
+    },
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
 }
