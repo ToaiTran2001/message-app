@@ -29,7 +29,7 @@ export default function RootLayout() {
         options={{ headerShown: true }}
       />
       <Stack.Screen
-        name="chat/Group"
+        name="chat/GroupCreate"
         options={{ headerShown: true, title: "New Group" }}
       />
     </Stack>

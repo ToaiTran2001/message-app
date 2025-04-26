@@ -99,10 +99,11 @@ const SignUp = () => {
       console.log("Sign up failed", error.message);
     }
     if (data) {
-      let parseData = data;
+      const parsedData =
+        typeof data === "string" ? JSON.parse(data.trim()) : data;
       router.push({
         pathname: "/auth/Verify",
-        params: { id: JSON.stringify(parseData.id) },
+        params: { id: JSON.stringify(parsedData.id) },
       });
     }
   }, [data, error]);

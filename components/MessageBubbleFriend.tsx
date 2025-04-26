@@ -50,30 +50,39 @@ import MessageTypingAnimation from "./MessageTypingAnimation";
 
 interface MessageBubbleFriendProps {
   text?: string;
+  name?: string;
   friend?: any;
   typing?: boolean;
 }
 
 const MessageBubbleFriend = ({
   text = "",
+  name = "",
   friend,
   typing = false,
 }: MessageBubbleFriendProps) => {
   return (
-    <View className="flex-row p-1 pl-4">
-      <Thumbnail url={""} size={42} />
-      <View className="bg-gray-300 rounded-[21px] max-w-[75%] px-4 py-3 justify-center ml-2 min-h-[42px]">
-        {typing ? (
-          <View className="flex-row">
-            <MessageTypingAnimation offset={0} />
-            <MessageTypingAnimation offset={1} />
-            <MessageTypingAnimation offset={2} />
-          </View>
-        ) : (
-          <Text className="text-gray-900 text-lg leading-5">{text}</Text>
-        )}
+    <View>
+      <View className="flex-row p-1 pl-4">
+        <Text className="text-gray-500 text-sm">{name}</Text>
       </View>
-      <View className="flex-1" />
+      <View className="flex-row p-1 pl-4">
+        <Thumbnail url={""} size={42} />
+        <View className="bg-gray-300 rounded-[21px] max-w-[75%] px-4 py-3 justify-center ml-2 min-h-[42px]">
+          {typing ? (
+            <View className="flex-row">
+              <MessageTypingAnimation offset={0} />
+              <MessageTypingAnimation offset={1} />
+              <MessageTypingAnimation offset={2} />
+            </View>
+          ) : (
+            <>
+              <Text className="text-gray-900 text-lg leading-5">{text}</Text>
+            </>
+          )}
+        </View>
+        <View className="flex-1" />
+      </View>
     </View>
   );
 };

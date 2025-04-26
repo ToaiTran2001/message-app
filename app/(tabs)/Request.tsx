@@ -112,6 +112,9 @@ const RequestCreate = ({
     }
     onPress(value);
   };
+  if (loading) {
+    return <LoadComponent />;
+  }
   return (
     <TouchableOpacity
       className="px-2 h-10 w-20 rounded-[6px] items-center justify-center my-1"
@@ -408,11 +411,19 @@ const Request = () => {
           setSearchText("");
         }}
       ></SearchBar>
-      <FlatList
-        data={requestList}
-        renderItem={({ item }) => <RequestRow item={item} />}
-        keyExtractor={(item: any) => item.id}
-      />
+      {searchLoading ? (
+        <LoadComponent />
+      ) : searchError ? (
+        <Text className="text-red-500 text-center mt-10">
+          {searchError.message}
+        </Text>
+      ) : (
+        <FlatList
+          data={requestList}
+          renderItem={({ item }) => <RequestRow item={item} />}
+          keyExtractor={(item: any) => item.id}
+        />
+      )}
     </View>
   );
 };

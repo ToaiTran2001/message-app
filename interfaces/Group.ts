@@ -30,3 +30,15 @@ export interface GroupInformationWithMemberResponse {
   role: string;
   createdAt: string;
 }
+
+export interface GroupFullInfoResponse {
+  id: number;
+  group_name: string;
+  group_pic: string;
+  owner: any;
+  free_talk: boolean;
+  free_invite: boolean;
+  created_at: string;
+  members: any[];
+  member_count: number;
+}

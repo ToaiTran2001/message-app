@@ -6,16 +6,25 @@ import { SendRequest, SendResponse } from "@/interfaces/Request";
 
 export const ADDRESS = "msg.igt.vn:7070"
 
+export const SOCKET_ADDRESS = "115.78.92.177:8000"
+
 const api = axios.create({
   baseURL: 'http://' + ADDRESS,
   headers: {
     'Content-Type': 'application/json; charset=UTF-8'
   }
 })
-
 // export default api
 
+const socketApi = axios.create({
+  baseURL: 'http://' + SOCKET_ADDRESS,
+  headers: {
+    'Content-Type': 'application/json; charset=UTF-8'
+  }
+})
+
 const BASE_URL = 'http://' + ADDRESS + '/Backend/api/controller'
+const SOCKET_BASE_URL = 'http://' + SOCKET_ADDRESS
 const REGISTER_URL = `/profile/register.php`
 const LOGIN_URL = `/profile/login.php`
 const LOGOUT_URL = `/profile/logout.php`
@@ -28,6 +37,11 @@ const SEND_RESPONSE_URL = `/friends/sendResponse.php`
 const SEND_REQUEST_URL = `/friends/sendRequest.php`
 const GET_PENDING_LIST_URL = `/friends/getPending.php`
 const POST_PICTURE_URL = ``
+const GET_GROUP_INFO_URL = `/group/getGroupInfo.php`
+const RECENT_MESSAGE_PERSONAL= `/api/messages/recent/personal`
+const LEAVE_GROUP_URL = `/group/leaveGroup.php`
+const GET_GROUP_LIST_USER_URL = `group/getUserGroupList.php`
+const GET_PROFILE_URL = `/profile/getProfile.php`
 
 // User API
 
@@ -80,12 +94,17 @@ export const fetchSignUp = async ({username, email, firstName, lastName, passwor
 export const fetchVerifyAccount = async ({token, id} : UserVerifyAccountRequest) => {
   const endpoint = BASE_URL + VERIFY_URL
   console.log("Call API Verify")
+  console.log("Endpoint", endpoint)
+  console.log("Data: ", {
+    token: token,
+    id: id,
+  })
   const response = await api({
     method: 'POST',
     url: endpoint,
     data: {
       token: token,
-      id: id
+      id: id,
     },
   })
   console.log("Response: ", response)
@@ -248,15 +267,25 @@ export const fetchSearch = async ({token, id} : UserVerifyAccountRequest, keywor
 export const fetchCreateGroup = async ({token, id} : UserVerifyAccountRequest, {groupName, groupPic, member, freeTalk, freeInvite} : GroupInformationRequest) => {
   const endpoint = BASE_URL + CREATE_GROUP_URL
   console.log("Call API Create Group")
+  console.log("Body: ", {
+    group_name: groupName,
+    group_pic: groupPic,
+    member,
+    free_talk: freeTalk,
+    free_invite: freeInvite,
+  })
+  console.log("Token :", token)
+
+  console.log("Endpoint: ", endpoint)
   const response = await api({
     method: 'POST',
     url: endpoint,
     data: {
-      group_name: groupName,
-      group_pic: groupPic,
+      groupName: groupName,
+      groupPic: groupPic,
       member,
-      free_talk: freeTalk,
-      free_invite: freeInvite,
+      freeTalk: freeTalk,
+      freeInvite: freeInvite,
     },
     headers: {
       'Authorization': `Bearer ${token}`
@@ -430,11 +459,6 @@ export const fetchSendResponse = async ({token, id} : UserVerifyAccountRequest, 
     friendId: friendId,
     response: responseStatus
   })
-  console.log("Authen: ", {
-    
-      'Authorization': `Bearer ${token}`
-    
-  })
   const response = await api({
     method: 'POST',
     url: endpoint,
@@ -485,6 +509,118 @@ export const fetchUploadPicture = async ({token, id} : UserVerifyAccountRequest,
     data: {
       profilePic: pictureUri
     },
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+}
+
+/*
+  Get Recent Message API
+  Response: Messages
+*/
+interface RecentMessageRequest {
+  target_id: string,
+  limit: number,
+}
+export const fetchRecentMessage = async ({token, id} : UserVerifyAccountRequest, {target_id, limit}: RecentMessageRequest) => {
+  const endpoint = SOCKET_BASE_URL + RECENT_MESSAGE_PERSONAL + `?user_id=${id}&target_id=${target_id}&limit=${limit}`;
+  console.log("Call API Get Recent Message")
+  console.log("Endpoint: ", endpoint)
+  const response = await socketApi({
+    method: 'GET',
+    url: endpoint,
+  })
+  // console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+}
+
+/*
+  Get Group Info
+  Response: List<UserInformation>
+*/
+export const fetchGroupFullInfo = async ({token, id} : UserVerifyAccountRequest, {groupId}: {groupId: string}) => {
+  const endpoint = BASE_URL + GET_GROUP_INFO_URL + `?id=${groupId}`
+  console.log("Call API Get Group Info")
+  console.log("Endpoint: ", endpoint)
+  const response = await api({
+    method: 'GET',
+    url: endpoint,
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+}
+
+/*
+  Leave Group
+  Response: message
+*/
+export const fetchLeaveGroup = async ({token, id} : UserVerifyAccountRequest, {groupId} : {groupId: string}) => {
+  const endpoint = BASE_URL + LEAVE_GROUP_URL
+  console.log("Call API Upload Picture")
+  console.log(endpoint)
+  console.log("Body: ", {
+    groupId: groupId
+  })
+  const response = await api({
+    method: 'POST',
+    url: endpoint,
+    data: {
+      groupId: groupId
+    },
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+}
+
+/*
+  Get Group List of user
+  Response: List<UserInformation>
+*/
+export const fetchSearchGroupListOfUser = async ({token, id} : UserVerifyAccountRequest) => {
+  const endpoint = BASE_URL + GET_GROUP_LIST_USER_URL
+  console.log("Call API Get List Of User")
+  console.log("Endpoint: ", endpoint)
+  const response = await api({
+    method: 'GET',
+    url: endpoint,
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  console.log("Response: ", response)
+  console.log("Data: ", response.data)
+  const data = response.data;
+  return data;
+}
+
+/*
+  Get Group List of user
+  Response: List<UserInformation>
+*/
+export const fetchUserProfile = async ({token, id} : UserVerifyAccountRequest) => {
+  const endpoint = BASE_URL + GET_PROFILE_URL + `?id=${id}`
+  console.log("Call API Get User Profile")
+  console.log("Endpoint: ", endpoint)
+  const response = await api({
+    method: 'GET',
+    url: endpoint,
     headers: {
       'Authorization': `Bearer ${token}`
     }

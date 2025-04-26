@@ -17,11 +17,13 @@ import useFetch from "@/services/useFetch";
 import useGlobal from "@/core/global";
 import utils from "@/core/utils";
 import { useSearchParams } from "expo-router/build/hooks";
+import LoadComponent from "@/components/LoadComponent";
 
 const Verify = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const parseId = utils.parseParams(id);
+  const [vefifyUpdate, setVerifyUpdate] = useState(false);
 
   // State to control input fields
   const [code, setCode] = useState("");
@@ -40,10 +42,19 @@ const Verify = () => {
   );
 
   const onVerifyPressed = () => {
+    console.log("Code: ", code);
     console.log("Verify pressed");
-
-    reFetch();
+    setVerifyUpdate(true);
   };
+
+  useEffect(() => {
+    if (vefifyUpdate) {
+      reFetch();
+      if (!loading) {
+        setVerifyUpdate(false);
+      }
+    }
+  }, [vefifyUpdate]);
 
   useEffect(() => {
     if (error) {
@@ -52,7 +63,7 @@ const Verify = () => {
     if (data) {
       console.log("Verify successful", data);
       router.push({
-        pathname: "/(tabs)",
+        pathname: "/auth/SignIn",
       });
     }
   }, [data, error]);
@@ -62,11 +73,7 @@ const Verify = () => {
       <KeyboardAvoidingView behavior="height" className="flex-1">
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           {loading ? (
-            <ActivityIndicator
-              size="large"
-              color="#000000"
-              className="mt-10 self-center"
-            />
+            <LoadComponent />
           ) : (
             <View className="flex-1 justify-center px-5">
               <Title text="InnoMess" color="#000000" />

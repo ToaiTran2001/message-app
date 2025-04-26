@@ -19,7 +19,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   fetchFriends,
   fetchGroups,
-  fetchRecentMessage,
+  fetchLeaveGroup,
   fetchSearch,
 } from "@/services/api";
 import useFetch from "@/services/useFetch";
@@ -32,31 +32,36 @@ import utils from "@/core/utils";
 import { UserInformation } from "@/interfaces/User";
 import useAuth from "@/core/useAuth";
 import LoadComponent from "@/components/LoadComponent";
+import LeaveButton from "@/components/LeaveButton";
 
-// const user: UserInformation = {
-//   id: 11,
-//   username: "huyngu1991",
-//   email: "huyxida001@gmail.com",
-//   firstName: "Huy",
-//   lastName: "Tran",
-//   profilePic: "",
-//   dob: "2025-04-19",
-// };
+const DisplayRow = ({ navigation, item, group, onPressLeave }: any) => {
+  const user = useGlobal((state) => state.user) as UserInformation;
+  const token = useGlobal((state) => state.tokens) as string;
+  const userRequest = {
+    id: user.id,
+    token: token,
+  };
+  const [leave, setLeave] = useState(false);
 
-// const tokens =
-//   "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJUSEVfSVNTVUVSIiwiYXVkIjoiVEhFX0FVRElFTkNFIiwiaWF0IjoxNzQ1MDI5MDMxLCJuYmYiOjE3NDUwMjkwMzEsImV4cCI6MTc1MDIxMzAzMSwiZGF0YSI6eyJpZCI6MTEsImVtYWlsIjoiaHV5eGlkYTAwMUBnbWFpbC5jb20iLCJ1c2VybmFtZSI6Imh1eW5ndTE5OTEifX0.v7uTaleO12zOqdz50wq0_zYgYDZDJGCz7OcKrCwdX6M";
-
-const DisplayRow = ({ navigation, item, group, updateMemberList }: any) => {
-  const [isClick, setIsClick] = useState(false);
-
-  const onPress = () => {
-    setIsClick(!isClick);
-    updateMemberList(item);
+  const onLeave = () => {
+    setLeave(true);
   };
 
+  const { data, loading, error, reFetch } = useFetch(
+    () => fetchLeaveGroup(userRequest, { groupId: item.group_id }),
+    false
+  );
+
   useEffect(() => {
-    setIsClick(false);
-  }, [group]);
+    if (leave) {
+      reFetch();
+      if (!loading) {
+        onPressLeave();
+      }
+    }
+  }, [leave]);
+
+  if (loading) return <LoadComponent />;
 
   return (
     <TouchableOpacity
@@ -69,28 +74,28 @@ const DisplayRow = ({ navigation, item, group, updateMemberList }: any) => {
       }}
     >
       <Cell>
-        <Thumbnail url={item.profilePic} size={76} />
+        <Thumbnail url={item.group_pic} size={76} />
         <View className="flex-1 px-4">
           <Text className="font-bold text-dark-100 mb-2">
-            {item.firstName} {item.lastName}
+            {item.group_name}
           </Text>
           {/* <Text className="text-dark-400 text-sm">{item.preview}</Text> */}
           <Text className="text-sm text-dark-500">
-            {utils.formatTime(String(new Date()))}
+            {utils.formatTime(item.created_at)}
           </Text>
         </View>
-        {group && <AddButton isClick={isClick} onPress={onPress} />}
+        <LeaveButton onLeave={onLeave} />
       </Cell>
     </TouchableOpacity>
   );
 };
 
-export default function Index({ navigation }: any) {
+const Group = ({ navigation }: any) => {
   const user = useGlobal((state) => state.user) as UserInformation;
   const token = useGlobal((state) => state.tokens) as string;
   const initialized = useGlobal((state) => state.initialized);
-  const { isLoading, isLoggedIn } = useAuth();
   const [displayList, setDisplayList] = useState([]);
+  const [groupListChange, setGroupListChange] = useState(false);
 
   const route = useRouter();
 
@@ -100,17 +105,13 @@ export default function Index({ navigation }: any) {
   };
 
   const {
-    data: friends,
-    loading: friendsLoading,
-    error: friendsError,
-    reFetch: friendsReFetch,
-  } = useFetch(() => fetchFriends(userRequest), false);
+    data: groups,
+    loading: groupsLoading,
+    error: groupsError,
+    reFetch: groupReFetch,
+  } = useFetch(() => fetchGroups(userRequest), false);
 
   const [searchText, setSearchText] = useState("");
-  const [recentMessageRequest, setRecentMessageRequest] = useState({
-    target_id: "",
-    limit: 0,
-  });
   const {
     data: searchResults,
     loading: searchLoading,
@@ -119,30 +120,23 @@ export default function Index({ navigation }: any) {
     reset,
   } = useFetch(() => fetchSearch(userRequest, searchText), false);
 
-  const {
-    data: recentMessages,
-    loading: recentMessagesLoading,
-    error: recentMessagesError,
-    reFetch: recentMessageReFetch,
-  } = useFetch(
-    () => fetchRecentMessage(userRequest, recentMessageRequest),
-    false
-  );
-
   const onSearch = (text: string) => {
     console.log("Search input");
     setSearchText(text);
   };
 
-  const [memberList, setMemberList] = useState<any[]>([]);
-  const updateMemberList = (friend: any) => {
-    const index = memberList.findIndex((item) => item.id === friend.id);
-    if (index > -1) {
-      setMemberList((prev) => prev.filter((item) => item.id !== friend.id));
-    } else {
-      setMemberList((prev) => [...prev, friend]);
-    }
+  const onPressLeave = () => {
+    setGroupListChange(true);
   };
+
+  useEffect(() => {
+    if (groupListChange) {
+      groupReFetch();
+      if (!groupsLoading) {
+        setGroupListChange(false);
+      }
+    }
+  }, [groupListChange]);
 
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
@@ -158,47 +152,36 @@ export default function Index({ navigation }: any) {
   const [group, setGroup] = useState(false);
   const handleGroupPressed = () => {
     setGroup(!group);
-    setMemberList([]);
   };
 
   useEffect(() => {
     if (searchText && searchText.length > 0) {
       setDisplayList(searchResults as []);
     } else {
-      if (friends) {
-      }
-      setDisplayList(friends === null ? [] : (friends as []));
+      setDisplayList(groups === null ? [] : (groups as []));
     }
-  }, [friends, searchResults]);
+  }, [groups, searchResults]);
 
   useEffect(() => {
     if (token) {
-      friendsReFetch();
+      groupReFetch();
     }
   }, [token]);
-
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isLoggedIn) {
-        router.replace("/auth/SignIn");
-      }
-    }
-  }, [isLoading, isLoggedIn]);
 
   useFocusEffect(
     useCallback(() => {
       if (token) {
-        friendsReFetch();
+        groupReFetch();
       }
     }, [token])
   );
 
-  if (isLoading || friendsLoading) return <LoadComponent />;
+  if (groupsLoading) return <LoadComponent />;
 
-  if (friendsError) {
+  if (groupsError) {
     return (
       <Text className="text-red-500 text-center mt-10">
-        {friendsError.message}
+        {groupsError.message}
       </Text>
     );
   }
@@ -207,7 +190,7 @@ export default function Index({ navigation }: any) {
     <View className="flex-1 bg-white items-center justify-center">
       <View className="flex-1 w-full px-2">
         <SearchBar
-          placeholder="Search for your friend..."
+          placeholder="Search for your group..."
           value={searchText}
           onChangeText={(text: string) => onSearch(text)}
           onRefresh={() => {
@@ -229,40 +212,18 @@ export default function Index({ navigation }: any) {
                   navigation={navigation}
                   item={item}
                   group={group}
-                  updateMemberList={updateMemberList}
+                  onPressLeave={onPressLeave}
                 />
               )}
               keyExtractor={(item: any) => {
-                return item.id;
+                return item.group_id;
               }}
             />
-
-            <View className="flex-1 flex-row absolute bottom-24 right-5 z-10">
-              <FloatButton
-                title="Group"
-                icon="add"
-                isPressed={group}
-                handlePress={handleGroupPressed}
-              />
-              {memberList.length > 1 && (
-                <FloatButton
-                  title="Next"
-                  icon="navigate-next"
-                  isPressed={false}
-                  handlePress={() => {
-                    router.push({
-                      pathname: "/chat/GroupCreate",
-                      params: {
-                        members: JSON.stringify(memberList),
-                      },
-                    });
-                  }}
-                />
-              )}
-            </View>
           </>
         )}
       </View>
     </View>
   );
-}
+};
+
+export default Group;

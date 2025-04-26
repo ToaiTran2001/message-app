@@ -6,9 +6,14 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import useGlobal from "@/core/global";
 import { UserInformation } from "@/interfaces/User";
 import useFetch from "@/services/useFetch";
-import { fetchSignOut, fetchUploadPicture } from "@/services/api";
+import {
+  fetchSignOut,
+  fetchUploadPicture,
+  fetchUserProfile,
+} from "@/services/api";
 import * as ImagePicker from "expo-image-picker";
 import { Redirect, router, useFocusEffect } from "expo-router";
+import LoadComponent from "@/components/LoadComponent";
 
 interface ProfileImageProps {
   profilePic: string;
@@ -86,18 +91,55 @@ const ProfileLogout = () => {
 
 const Profile = () => {
   const user = useGlobal((state) => state.user) as UserInformation;
+  const token = useGlobal((state) => state.tokens) as string;
+  const [updateProfile, setUpdateProfile] = useState(false);
+  const userRequest = {
+    id: user.id,
+    token: token,
+  };
 
-  useFocusEffect(useCallback(() => {}, []));
+  const {
+    data: userProfile,
+    loading: userProfileLoading,
+    error: userProfileError,
+    reFetch: userProfileReFetch,
+    reset,
+  } = useFetch(() => fetchUserProfile(userRequest), false);
+
+  useEffect(() => {
+    if (updateProfile) {
+      userProfileReFetch();
+      if (!userProfileLoading) {
+        setUpdateProfile(false);
+      }
+    }
+  }, [updateProfile]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (token) {
+        userProfileReFetch();
+      }
+    }, [token])
+  );
+
+  useEffect(() => {
+    if (token) {
+      userProfileReFetch();
+    }
+  }, [token]);
+
+  if (userProfileLoading) return <LoadComponent />;
 
   return (
     <View className="flex-1 items-center justify-center bg-white px-5">
-      <ProfileImage profilePic={user.profilePic} />
+      <ProfileImage profilePic={userProfile?.profilePic} />
 
       <Text className="text-center text-dark-100 font-bold text-2xl mb-2">
-        {user.firstName} {user.lastName}
+        {userProfile?.firstName} {userProfile?.lastName}
       </Text>
       <Text className="text-center text-dark-400 text-base mb-2">
-        @{user.username}
+        @{userProfile?.username}
       </Text>
       <ProfileLogout />
     </View>

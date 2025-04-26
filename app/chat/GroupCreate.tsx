@@ -34,7 +34,7 @@ const FriendRowSmall = ({ item, updateMemberList }: any) => {
   );
 };
 
-const Group = () => {
+const GroupCreate = () => {
   const { members } = useLocalSearchParams();
   const parsedMembers = utils.parseParams(members);
   const [memberList, setMemberList] = useState<any[]>(parsedMembers);
@@ -78,16 +78,9 @@ const Group = () => {
     reFetch();
   };
 
-  // UseEffect
   useEffect(() => {
-    if (error) {
-      console.log("Error creating group:", error);
-      return;
-    }
-    if (!loading) {
-      console.log("Group created successfully:", data);
-      // Navigate to the group chat screen or perform any other action
-      router.push("/(tabs)");
+    if (data) {
+      router.navigate("/(tabs)/Group");
     }
   }, [data]);
 
@@ -122,4 +115,4 @@ const Group = () => {
   );
 };
 
-export default Group;
+export default GroupCreate;

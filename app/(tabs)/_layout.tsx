@@ -57,6 +57,18 @@ const _Layout = () => {
         }}
       />
       <Tabs.Screen
+        name="Group"
+        options={{
+          title: "Group",
+          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <>
+              <TabIcon focused={focused} title="Group" icon="groups" />
+            </>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="Request"
         options={{
           title: "Request",

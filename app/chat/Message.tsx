@@ -27,6 +27,9 @@ import MessageBubbleFriend from "@/components/MessageBubbleFriend";
 import FileBubbleMe from "@/components/FileBubbleMe";
 import FileBubbleFriend from "@/components/FileBubbleFriend";
 import { useNavigation } from "expo-router";
+import useFetch from "@/services/useFetch";
+import { fetchGroupFullInfo, fetchRecentMessage } from "@/services/api";
+import LoadComponent from "@/components/LoadComponent";
 
 const DEFAULT_SERVER_URL = "http://115.78.92.177:8000/";
 
@@ -41,7 +44,7 @@ function MessageHeader({ item }: any) {
   );
 }
 
-function MessageBubble({ index, message, friend }: any) {
+function MessageBubble({ index, message, friend, name }: any) {
   const user = useGlobal((state) => state.user) as UserInformation;
   const [showTyping, setShowTyping] = useState(false);
 
@@ -75,7 +78,7 @@ function MessageBubble({ index, message, friend }: any) {
   return message.sender === user.id.toString() ? (
     <MessageBubbleMe text={message.content} />
   ) : (
-    <MessageBubbleFriend text={message.content} friend={friend} />
+    <MessageBubbleFriend text={message.content} friend={friend} name={name} />
   );
 }
 
@@ -128,6 +131,10 @@ function FileBubble({ index, message, friend }: any) {
 const ChatRoom = () => {
   const user = useGlobal((state) => state.user) as UserInformation;
   const token = useGlobal((state) => state.tokens) as string;
+  const userRequest = {
+    id: user.id,
+    token: token,
+  };
   const { item } = useLocalSearchParams();
   const parseItem = utils.parseParams(item);
   const chatType = parseItem.group_id ? GROUP_TYPE : PERSONAL_TYPE;
@@ -143,7 +150,7 @@ const ChatRoom = () => {
 
   const [loading, setLoading] = useState(false);
   const [currentChat, setCurrentChat] = useState<ChatInfo>({
-    id: user.id,
+    id: parseItem.group_id ? parseItem.group_id : parseItem.id,
     type: chatType,
   });
   const [selectedFile, setSelectedFile] = useState(null);
@@ -152,11 +159,38 @@ const ChatRoom = () => {
   const [messageList, setMessageList] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+  const {
+    data: groupFullInfo,
+    loading: groupFullInfoLoading,
+    error: groupFullInfoError,
+    reFetch: groupFullInfoReFetch,
+  } = useFetch(
+    () => fetchGroupFullInfo(userRequest, { groupId: currentChat.id }),
+    false
+  );
+
+  const {
+    data: recentMessages,
+    loading: recentMessagesLoading,
+    error: recentMessageError,
+    reFetch: recentMessageReFetch,
+  } = useFetch(
+    () =>
+      fetchRecentMessage(userRequest, { target_id: currentChat.id, limit: 20 }),
+    false
+  );
+
   useEffect(() => {
     if (user.id) {
       setUserId(user.id.toString());
     }
   }, [user.id]);
+
+  useEffect(() => {
+    if (currentChat.type === GROUP_TYPE) {
+      groupFullInfoReFetch();
+    }
+  }, [currentChat]);
 
   useEffect(() => {
     if (user) {
@@ -211,10 +245,7 @@ const ChatRoom = () => {
 
       newSocket.on("group_message", (data) => {
         console.log("Received group message:", data);
-        if (
-          (data.sender === userId && data.receiver === chatId) ||
-          (data.sender === chatId && data.receiver === userId)
-        ) {
+        if (data.group === chatId) {
           setMessageList((prevMessages) => [data, ...prevMessages]);
         }
 
@@ -239,35 +270,50 @@ const ChatRoom = () => {
         newSocket.off("personal_message");
       };
     }
-  }, [serverUrlInput, user, currentChat]);
+  }, [serverUrlInput, user, currentChat, groupFullInfo]);
 
   // Load message history when changing chats
-  useEffect(() => {
-    if (socket && currentChat) {
-      setLoading(true);
-      setMessageList([]);
 
-      socket.emit(
-        "get_message_history_handler",
-        {
-          target_id: currentChat.id,
-          type: currentChat.type,
-          limit: 50,
-          offset: 0,
-        },
-        (response: any) => {
-          if (response.status === "success") {
-            setMessageList(response.messages);
-          } else {
-            console.error("Failed to load message history:", response.message);
-          }
-          setLoading(false);
-        }
-      );
+  useEffect(() => {
+    if (currentChat) {
+      recentMessageReFetch();
     }
-  }, [socket, currentChat]);
+  }, [currentChat]);
+  useEffect(() => {
+    if (recentMessages) {
+      setMessageList((prevMessages) => [
+        ...(recentMessages.messages as any[]),
+        ...prevMessages,
+      ]);
+    }
+  }, [recentMessages]);
+  // useEffect(() => {
+  //   if (socket && currentChat) {
+  //     setLoading(true);
+  //     setMessageList([]);
+
+  //     socket.emit(
+  //       "get_message_history_handler",
+  //       {
+  //         target_id: currentChat.id,
+  //         type: currentChat.type,
+  //         limit: 50,
+  //         offset: 0,
+  //       },
+  //       (response: any) => {
+  //         if (response.status === "success") {
+  //           setMessageList(response.messages);
+  //         } else {
+  //           console.error("Failed to load message history:", response.message);
+  //         }
+  //         setLoading(false);
+  //       }
+  //     );
+  //   }
+  // }, [socket, currentChat]);
 
   const [message, setMessage] = useState("");
+  const [name, setName] = useState("");
 
   // Update the header
   const navigation = useNavigation();
@@ -291,7 +337,7 @@ const ChatRoom = () => {
       content: message,
       reply: "",
     });
-    console.log(messageList);
+    // console.log(messageList);
     setMessage("");
   };
 
@@ -304,7 +350,7 @@ const ChatRoom = () => {
       file_type: fileContent.fileType,
       reply: "",
     });
-    console.log(messageList);
+    // console.log(messageList);
     setMessage("");
   };
 
@@ -312,6 +358,25 @@ const ChatRoom = () => {
     setMessage(value);
     // messageType(friend.username)
   };
+
+  const getName = (senderId: string) => {
+    if (currentChat.type === GROUP_TYPE) {
+      console.log("Info group", groupFullInfo);
+      const members = groupFullInfo?.members as [];
+      if (members) {
+        const sender = members.find((item: any) => {
+          return item.id == senderId;
+        });
+        return sender?.firstName + " " + sender?.lastName;
+      }
+    } else {
+      return parseItem.firstName + " " + parseItem.lastName;
+    }
+  };
+
+  if (groupFullInfoLoading) {
+    return <LoadComponent />;
+  }
 
   return (
     <SafeAreaView className="flex-1">
@@ -326,10 +391,10 @@ const ChatRoom = () => {
           contentContainerStyle={{
             paddingTop: 30,
           }}
-          data={[{ id: -1 }, ...messageList]}
+          data={[{ _id: -1 }, ...messageList]}
           inverted={true}
           keyExtractor={(item) =>
-            typeof item === "string" ? item : item.id?.toString()
+            typeof item === "string" ? item : item._id?.toString()
           }
           onEndReached={() => {
             // if (messagesNext) {
@@ -343,9 +408,15 @@ const ChatRoom = () => {
                   index={index}
                   message={item}
                   friend={parseItem}
+                  name={getName(item.sender)}
                 />
               ) : (
-                <FileBubble index={index} message={item} friend={parseItem} />
+                <FileBubble
+                  index={index}
+                  message={item}
+                  name={getName(item.sender)}
+                  friend={parseItem}
+                />
               )}
             </>
           )}
