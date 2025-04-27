@@ -12,8 +12,6 @@ interface FileViewProps {
 
 const FileView = ({ fileUrl, fileType, fileContent }: FileViewProps) => {
   const fullUrl = "http://115.78.92.177:8000" + fileUrl;
-  console.log("FileType: ", fileType);
-  console.log("Fullurl: ", fullUrl);
 
   return (
     <>
@@ -23,10 +21,8 @@ const FileView = ({ fileUrl, fileType, fileContent }: FileViewProps) => {
           style={{ width: 200, height: 200 }}
           resizeMode="contain"
         />
-      ) : fileType === "application/pdf" ? (
-        <ChatLink url={fullUrl} />
       ) : (
-        <Text>Unsupported file type</Text>
+        <ChatLink url={fullUrl} />
       )}
     </>
   );

@@ -225,7 +225,7 @@ const ChatRoom = () => {
 
       // Event listeners for messages
       newSocket.on("personal_message", (data) => {
-        // console.log("Received personal message:", data);
+        console.log("Received personal message:", data);
         if (
           (data.sender === userId && data.receiver === chatId) ||
           (data.sender === chatId && data.receiver === userId)
@@ -361,7 +361,6 @@ const ChatRoom = () => {
 
   const getName = (senderId: string) => {
     if (currentChat.type === GROUP_TYPE) {
-      console.log("Info group", groupFullInfo);
       const members = groupFullInfo?.members as [];
       if (members) {
         const sender = members.find((item: any) => {
